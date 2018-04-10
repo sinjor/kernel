@@ -98,7 +98,7 @@ def get_pred_category_which_has_pro_index(x):
     else:
         return 0
 def item_category_pro(input_data):
-	category_data = train_data
+	category_data = input_data
 	category_feature = category_data[["item_category_list", "predict_category_property","item_property_list"]]
 	#item_category:当前样本所属的真实广告类目
 	#pred_category_property_list:当前样本上下文预测得到的类目属性列表
