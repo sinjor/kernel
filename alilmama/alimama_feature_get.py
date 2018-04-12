@@ -33,6 +33,34 @@ time_array = time.strptime(last_day_begin_time, "%Y-%m-%d %H:%M:%S")
 last_day_timestamp = int(time.mktime(time_array))
 #print(last_day_timestamp)
 
+#查看训练集和测试集中user_id等数据交集记录
+user_id_info = 1 *test_data.user_id.apply(lambda x: x in train_data.user_id.values)
+shop_id_info = 1 *test_data.shop_id.apply(lambda x: x in train_data.shop_id.values)
+context_id_info = 1 *test_data.context_id.apply(lambda x: x in train_data.context_id.values)
+item_id_info = 1 *test_data.item_id.apply(lambda x: x in train_data.item_id.values)
+print(user_id_info.value_counts())
+print(shop_id_info.value_counts())
+print(context_id_info.value_counts())
+print(item_id_info.value_counts())
+
+#唯一个数和缺失个数
+def get_summary_data(input_data, miss_symbol):
+    input_data.replace(miss_symbol, np.NaN, inplace=True)
+    distinct_count = input_data.apply(lambda x: x.unique().size)
+    dismiss_count = input_data.apply(lambda x: x.count())
+    distinct_count.rename("distinct_count", inplace=True)
+    dismiss_count.rename("dismiss_count", inplace=True)
+    summary_data = pd.concat([distinct_count, dismiss_count],axis=1)
+    summary_data.insert(loc=0, column="row_index",value=range(summary_data.index.size))
+    summary_data["miss_count"] = input_data.index.size - summary_data.dismiss_count
+    summary_data["variable_type"] = input_data.dtypes
+    summary_data["min_value"] = input_data.min()
+    summary_data["max_value"] = input_data.max()
+    #summary_data["row_index"] = range(summary_data.index.size)
+    #不能先重建索引，否则后面就无法根据索引新增数据了
+    #summary_data.reset_index(inplace=True)
+    #summary_data.rename(columns={"index":"column_name"}, inplace=True)
+    return summary_data
 
 ################################广告类目属性特征######################################
 #商品真实类目出现在预测集中的第几个
@@ -153,7 +181,98 @@ def item_category_pro(input_data):
 	                "pred_category_which_has_pro_num","pred_category_which_has_pro_num_div_pred_category_num"]]
 	return train_category_feature
 ################################广告类目属性特征######################################
-#
+
+################################商店特征######################################
+#shop_data = train_data.ix[train_data.context_timestamp < last_day_timestamp, :]
+# 店铺的所有广告个数(用户个数等应该一致，前提是没用缺失值)
+# 店铺的交易成功次数
+# 店铺交易成功率
+# 店铺的不同广告个数
+# 店铺中交易成功的不同广告个数
+# 店铺中交易成功的不同广告个数/店铺的不同广告个数
+# 店铺的不同用户个数
+# 店铺中交易成功的不同用户个数
+# 店铺中交易成功的不同用户个数/店铺的不同用户个数
+# 店铺的不同广告品牌编号
+# 店铺中交易成功的不同广告品牌编号
+# 店铺中交易成功的不同广告品牌编号/店铺的不同广告品牌编号
+
+#unique比ddrop_duplicates运行快
+#apply前面只能是一个数据列
+#agg前面可以是多个数据列
+#商店特征需要严格遵守训练集的时间窗口，不能使用测试集的数据，否则容易导致过拟合
+def get_shop_feature(input_data):
+    shop_data = input_data
+    shop_id = shop_data.loc[:,["shop_id"]].drop_duplicates()
+    shop_data_is_trade = shop_data.loc[shop_data["is_trade"] == 1, :]
+    t1_group = shop_data.loc[:,["shop_id", "item_id", "user_id", "item_brand_id"]].groupby("shop_id")
+    t1_1 = t1_group[["item_id"]].count()
+    t1_1.rename(columns={"item_id":"shop_item_count"},inplace=True)
+    t1_1["shop_item_dist_count"] = t1_group["item_id"].agg(lambda x:x.unique().size)
+    t1_1["shop_user_dist_count"] = t1_group["user_id"].agg(lambda x:x.unique().size)
+    t1_1["shop_item_brand_dist_count"] = t1_group["item_brand_id"].agg(lambda x:x[x!=-1].unique().size)
+    t1_2_group = shop_data_is_trade.loc[:,["shop_id", "item_id","user_id", "item_brand_id"]].groupby("shop_id")
+    t1_2 = t1_2_group[["item_id"]].count()
+    t1_2.rename(columns={"item_id":"shop_y1_count"},inplace=True)
+    t1_2["shop_y1_item_dist_count"] = t1_2_group["item_id"].agg(lambda x:x.unique().size)
+    t1_2["shop_y1_user_dist_count"] = t1_2_group["user_id"].agg(lambda x:x.unique().size)
+    t1_2["shop_y1_item_brand_dist_count"] = t1_group["item_brand_id"].agg(lambda x:x[x!=-1].unique().size)
+    #t1_1 = pd.merge(left=shop_id, right=t1_1, how="left", on="shop_id")
+    t1_1.reset_index(inplace=True)
+    t1_2.reset_index(inplace=True)
+    t1_tmp = pd.merge(left=t1_1, right=t1_2, how="left", on="shop_id")
+    #t1_tmp.fillna(value=0, inplace=True)
+    t1_tmp["shop_y1_item_count_div_item_count"] = t1_tmp["shop_y1_count"] / t1_tmp["shop_item_count"]
+    t1_tmp["shop_y1_item_dist_count_div_item_dist_count"] = t1_tmp["shop_y1_item_dist_count"] / t1_tmp["shop_item_dist_count"]
+    t1_tmp["shop_y1_user_dist_count_div_user_dist_count"] = t1_tmp["shop_y1_user_dist_count"] / t1_tmp["shop_user_dist_count"]
+    t1_tmp["shop_y1_brand_dist_count_div_item_brand_dist_count"] = t1_tmp["shop_y1_item_brand_dist_count"] / t1_tmp["shop_item_brand_dist_count"]
+    t1_tmp.fillna(value=0, inplace=True)
+    t1 = t1_tmp
+    #display(t1_tmp)
+
+    #店铺中广告商品的价格等级,销量等级，被收藏次数的等级，展示次数的等级的平均值
+    #店铺中交易成功的广告商品的价格等级,销量等级，被收藏次数的等级，展示次数的等级的平均值
+    shop_id = shop_data.loc[:,["shop_id"]].drop_duplicates()
+    #shop_data_is_trade = shop_data.loc[shop_data["is_trade"] == 1, :]
+    tmp_data = shop_data.loc[shop_data["item_price_level"] !=-1, ["shop_id", "item_id", "item_price_level"]].drop_duplicates()
+    t2_1 = tmp_data.groupby("shop_id")[["item_price_level"]].mean().reset_index()
+    t2_1.rename(columns={"item_price_level":"shop_item_price_level_mean"}, inplace=True)
+    tmp_data = shop_data.loc[shop_data["item_sales_level"] !=-1, ["shop_id", "item_id", "item_sales_level"]].drop_duplicates()
+    t2_2 = tmp_data.groupby("shop_id")[["item_sales_level"]].mean().reset_index()
+    t2_2.rename(columns={"item_sales_level":"shop_item_sales_level_mean"}, inplace=True)
+    tmp_data = shop_data.loc[shop_data["item_collected_level"] !=-1, ["shop_id", "item_id", "item_collected_level"]].drop_duplicates()
+    t2_3 = tmp_data.groupby("shop_id")[["item_collected_level"]].mean().reset_index()
+    t2_3.rename(columns={"item_collected_level":"shop_item_collected_level_mean"}, inplace=True)
+    tmp_data = shop_data.loc[shop_data["item_collected_level"] !=-1, ["shop_id", "item_id", "item_pv_level"]].drop_duplicates()
+    t2_4 = tmp_data.groupby("shop_id")[["item_pv_level"]].mean().reset_index()
+    t2_4.rename(columns={"item_pv_level":"shop_item_pv_level_mean"}, inplace=True)
+
+    tmp_data = shop_data_is_trade.loc[shop_data_is_trade["item_price_level"] !=-1, ["shop_id", "item_id", "item_price_level"]].drop_duplicates()
+    t2_5 = tmp_data.groupby("shop_id")[["item_price_level"]].mean().reset_index()
+    t2_5.rename(columns={"item_price_level":"shop_y1_item_price_level_mean"}, inplace=True)
+    tmp_data = shop_data_is_trade.loc[shop_data_is_trade["item_sales_level"] !=-1, ["shop_id", "item_id", "item_sales_level"]].drop_duplicates()
+    t2_6 = tmp_data.groupby("shop_id")[["item_sales_level"]].mean().reset_index()
+    t2_6.rename(columns={"item_sales_level":"shop_y1_item_sales_level_mean"}, inplace=True)
+    tmp_data = shop_data_is_trade.loc[shop_data_is_trade["item_collected_level"] !=-1, ["shop_id", "item_id", "item_collected_level"]].drop_duplicates()
+    t2_7 = tmp_data.groupby("shop_id")[["item_collected_level"]].mean().reset_index()
+    t2_7.rename(columns={"item_collected_level":"shop_y1_item_collected_level_mean"}, inplace=True)
+    tmp_data = shop_data_is_trade.loc[shop_data_is_trade["item_pv_level"] !=-1, ["shop_id", "item_id", "item_pv_level"]].drop_duplicates()
+    t2_8 = tmp_data.groupby("shop_id")[["item_pv_level"]].mean().reset_index()
+    t2_8.rename(columns={"item_pv_level":"shop_y1_item_pv_level_mean"}, inplace=True)
+    t2_tmp = pd.merge(left=shop_id, right=t2_1, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_2, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_3, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_4, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_5, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_6, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_7, how="left", on="shop_id")
+    t2_tmp = pd.merge(left=t2_tmp, right=t2_8, how="left", on="shop_id")
+    t2_tmp.fillna(value=0, inplace=True)
+    t2 = t2_tmp
+    shop_feature = pd.merge(left=t1, right=t2, how="left", on="shop_id")
+    return shop_feature
+################################商店特征######################################
+
 train_category_feature = item_category_pro(train_data)
 #train_category_feature.to_csv("train_category_feature.csv", index=False)
 
