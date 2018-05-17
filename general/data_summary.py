@@ -23,6 +23,26 @@ train_data_summary["variable_type"] = train_data.dtypes
 train_data_summary.to_csv(summary_data_file, drop_in )
 exit()
 
+############################################唯一个数和缺失个数
+def get_summary_data(data, miss_symbol):
+    input_data = data.replace(miss_symbol, np.NaN)
+    distinct_count = input_data.apply(lambda x: x.unique().size)
+    dismiss_count = input_data.apply(lambda x: x.count())
+    distinct_count.rename("distinct_count", inplace=True)
+    dismiss_count.rename("dismiss_count", inplace=True)
+    summary_data = pd.concat([distinct_count, dismiss_count],axis=1)
+    summary_data.insert(loc=0, column="row_index",value=range(summary_data.index.size))
+    summary_data["miss_count"] = input_data.index.size - summary_data.dismiss_count
+    summary_data["variable_type"] = input_data.dtypes
+    summary_data["min_value"] = input_data.min()
+    summary_data["max_value"] = input_data.max()
+    #summary_data["row_index"] = range(summary_data.index.size)
+    #不能先重建索引，否则后面就无法根据索引新增数据了
+    #summary_data.reset_index(inplace=True)
+    #summary_data.rename(columns={"index":"column_name"}, inplace=True)
+    return summary_data
+
+    
 '''
           dist_count  non_empty_count variable_type
 variable                                           
