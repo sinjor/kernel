@@ -1,14 +1,14 @@
 -- 字段名称	解释
 -- event_id	事件id
--- user_id	虚拟用户ID
+factor-- user_id	虚拟用户ID
 -- gmt_occur	事件发生时间
--- client_ip	用户IP
--- network	网络类型
--- device_sign	设备ID
+factor-- client_ip	用户IP
+factor-- network	网络类型 19
+factor-- device_sign	设备ID
 -- info_1	信息1
 -- info_2	信息2
--- ip_prov	IP省
--- ip_city	IP市
+factor-- ip_prov	IP省
+factor-- ip_city	IP市
 -- cert_prov	证件省
 -- cert_city	证件市
 -- card_bin_prov	支付卡bin省
@@ -17,32 +17,41 @@
 -- card_mobile_city	支付账号市
 -- card_cert_prov	支付卡省
 -- card_cert_city	支付卡市
--- is_one_people	主次双方证件是否一致
--- mobile_oper_platform	手机操作平台
--- operation_channel	支付方式
--- pay_scene	支付场景
--- amt	金额
--- card_cert_no	虚拟用户证件号
--- opposing_id	对方虚拟用户ID
--- income_card_no	虚拟用户的收款银行卡号
--- income_card_cert_no	虚拟收款用户的证件号
--- income_card_mobile	虚拟收款用户的手机号
--- income_card_bank_code	收入账号银行代码
+factor -- is_one_people	主次双方证件是否一致 2
+factor -- mobile_oper_platform	手机操作平台 4
+factor-- operation_channel	支付方式 4
+factor-- pay_scene	支付场景 21
+numeric-- amt	金额
+factor-- card_cert_no	虚拟用户证件号 0.48
+
+factor-- opposing_id	对方虚拟用户ID 257个样本一致
+factor-- income_card_no	虚拟用户的收款银行卡号 0.91
+facror-- income_card_cert_no	虚拟收款用户的证件号 0.99
+factor-- income_card_mobile	虚拟收款用户的手机号 0.99
+-- income_card_bank_code	收入账号银行代码 0.95
 -- province	收入账号归属省份
 -- city	虚拟收款用户归属城市
--- is_peer_pay	是否代付
+-- is_peer_pay	是否代付 0.98
 -- version	版本号
 -- is_fraud	预测标签
  -- 合并训练集表格
+ -- 生成unix时间戳表格
+drop table if exists t_sj_train_data_code_unix;
+
+
+create table t_sj_train_data_code_unix as
+select unix_timestamp(to_date(t.gmt_occur,"yyyy-mm-dd hh")) as gmt_occur_unix,
+       t.*
+from t_sj_train_data_code t;
 
 drop table if exists t_sj_train_data_code;
 
-
+-- /*+ MAPJOIN(t1),MAPJOIN(t2),MAPJOIN(t3),MAPJOIN(t4),MAPJOIN(t5),
+-- MAPJOIN(t6),MAPJOIN(t7),MAPJOIN(t12) ,MAPJOIN(t17) ,MAPJOIN(t18) ,MAPJOIN(t19),
+-- MAPJOIN(t20),MAPJOIN(t21) ,MAPJOIN(t23) ,MAPJOIN(t25) ,MAPJOIN(t26),
+-- MAPJOIN(t29),MAPJOIN(t30)*/
 create table t_sj_train_data_code as
-select /*+ MAPJOIN(t1),MAPJOIN(t2),MAPJOIN(t3),MAPJOIN(t4),MAPJOIN(t5),
-MAPJOIN(t6),MAPJOIN(t7),MAPJOIN(t12) ,MAPJOIN(t17) ,MAPJOIN(t18) ,MAPJOIN(t19),
-MAPJOIN(t20),MAPJOIN(t21) ,MAPJOIN(t23) ,MAPJOIN(t25) ,MAPJOIN(t26),
-MAPJOIN(t29),MAPJOIN(t30)*/ t0.event_id,
+select  t0.event_id,
                             t0.gmt_occur,
                             t0.is_fraud,
                             t0.amt,
@@ -87,7 +96,7 @@ left outer join t_province_code t7 on t0.ip_prov = t7.province
 left outer join t_city_code t8 on t0.ip_city = t8.city
 left outer join t_province_code t9 on t0.cert_prov = t9.province
 left outer join t_city_code t10 on t0.cert_city = t10.city
-left outer join t_province_code t11 on t0.province = t11.province
+left outer join t_province_code t11 on t0.card_bin_prov = t11.province
 left outer join t_city_code t12 on t0.card_bin_city = t12.city
 left outer join t_province_code t13 on t0.card_mobile_prov = t13.province
 left outer join t_city_code t14 on t0.card_mobile_city = t14.city
@@ -100,16 +109,16 @@ left outer join t_pay_scene_code t20 on t0.pay_scene = t20.pay_scene
 left outer join t_card_cert_no_code t21 on t0.card_cert_no = t21.card_cert_no
 left outer join t_user_id_code t22 on t0.opposing_id = t22.user_id
 left outer join t_income_card_no_code t23 on t0.income_card_no = t23.income_card_no
-left outer join t_card_cert_no_code t24 on t0.income_card_cert_no = t24.card_cert_no_code
+left outer join t_card_cert_no_code t24 on t0.income_card_cert_no = t24.card_cert_no
 left outer join t_income_card_mobile_code t25 on t0.income_card_mobile = t25.income_card_mobile
 left outer join t_income_card_bank_code_code t26 on t0.income_card_bank_code = t26.income_card_bank_code
 left outer join t_province_code t27 on t0.province = t27.province
 left outer join t_city_code t28 on t0.city = t28.city
 left outer join t_is_peer_pay_code t29 on t0.is_peer_pay = t29.is_peer_pay
-left outer join t_version_code t30 on t0.version = t30.version -- user_id
+left outer join t_version_code t30 on t0.version = t30.version
 
 
-
+-- 随机数编码
 drop table if exists t_user_id_code;
 
 
@@ -384,4 +393,5 @@ from
     (select distinct version as version
      from atec_1000w_ins_data
      where version is not null)t;
+
 
