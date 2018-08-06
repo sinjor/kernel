@@ -36,120 +36,46 @@ factor-- income_card_mobile 虚拟收款用户的手机号 0.99
 -- is_fraud 预测标签
 
 -- 获取用户相关的特征
-drop table if exists t_sj_feature_uid;
-
-
-create table t_sj_feature_uid as
-select 
-t0.event_id,
-t1.id_cnt_24h,
-t1.id_ucnt_device_sign_24h,
-t1.id_ucnt_network_24h,
-t1.id_ucnt_client_ip_24h,
-t1.id_ucnt_ip_prov_24h,
-t1.id_ucnt_ip_city_24h,
-t1.id_ucnt_operation_channel_24h,
-t1.id_ucnt_pay_scene_24h
-t2.id_cnt_1h,
-t2.id_ucnt_device_sign_1h,
-t2.id_ucnt_network_1h,
-t2.id_ucnt_client_ip_1h,
-t2.id_ucnt_ip_prov_1h,
-t2.id_ucnt_ip_city_1h,
-t2.id_ucnt_operation_channel_1h,
-t2.id_ucnt_pay_scene_1h,
-t3.gmt_occur_unix_diff,
-t4.gmt_occur_unix_diff_not_now,
-t5.uid_client_ip_rate_24h,
-t5.uid_network_rate_24h,
-t5.uid_device_sign_rate_24h,
-t5.uid_ip_prov_rate_24h,
-t5.uid_ip_city_rate_24h,
-t5.uid_mobile_oper_platform_rate_24h,
-t5.uid_operation_channel_rate_24h,
-t5.uid_pay_scene_rate_24h
- from 
-(select event_id from t_sj_train_data_code_unix) t0 
-left outer join t_sj_feature_user_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_feature_user_1h t2 on t0.event_id = t2.event_id
-left outer join t_sj_user_time_diff t3 on t0.event_id = t3.event_id
-left outer join t_sj_user_time_diff_not_now t4 on t0.event_id = t4.event_id
-left outer join t_sj_user_scatter_freq_24h t5 on t0.event_id = t5.event_id;
-
--- 去除特征中的缺失值
-drop table if exists t_sj_feature_uid_notnull;
-
-
-create table t_sj_feature_uid_notnull as
-select 
-event_id,
-nvl(id_cnt_24h, 0) as id_cnt_24h
-nvl(id_ucnt_device_sign_24h, 0) as id_ucnt_device_sign_24h,
-nvl(id_ucnt_network_24h, 0) as id_ucnt_network_24h,
-nvl(id_ucnt_client_ip_24h, 0) as id_ucnt_client_ip_24h,
-nvl(id_ucnt_ip_prov_24h, 0) as id_ucnt_ip_prov_24h,
-nvl(id_ucnt_ip_city_24h, 0) as id_ucnt_ip_city_24h,
-nvl(id_ucnt_operation_channel_24h, 0) as id_ucnt_operation_channel_24h,
-nvl(id_ucnt_pay_scene_24h, 0) as id_ucnt_pay_scene_24h,
-nvl(id_cnt_1h, 0) as id_cnt_1h,
-nvl(id_ucnt_device_sign_1h, 0) as id_ucnt_device_sign_1h,
-nvl(id_ucnt_network_1h, 0) as id_ucnt_network_1h,
-nvl(id_ucnt_client_ip_1h, 0) as id_ucnt_client_ip_1h,
-nvl(id_ucnt_ip_prov_1h, 0) as id_ucnt_ip_prov_1h,
-nvl(id_ucnt_ip_city_1h, 0) as id_ucnt_ip_city_1h,
-nvl(id_ucnt_operation_channel_1h, 0) as id_ucnt_operation_channel_1h,
-nvl(id_ucnt_pay_scene_1h, 0) as id_ucnt_pay_scene_1h,
-nvl(gmt_occur_unix_diff, 0) as gmt_occur_unix_diff,
-nvl(gmt_occur_unix_diff_not_now, 0) as gmt_occur_unix_diff_not_now,
-nvl(uid_client_ip_rate_24h, 0) as uid_client_ip_rate_24h,
-nvl(uid_network_rate_24h, 0) as uid_network_rate_24h,
-nvl(uid_device_sign_rate_24h, 0) as uid_device_sign_rate_24h,
-nvl(uid_ip_prov_rate_24h, 0) as uid_ip_prov_rate_24h,
-nvl(uid_ip_city_rate_24h, 0) as uid_ip_city_rate_24h,
-nvl(uid_mobile_oper_platform_rate_24h, 0) as uid_mobile_oper_platform_rate_24h,
-nvl(uid_operation_channel_rate_24h, 0) as uid_operation_channel_rate_24h,
-nvl(uid_pay_scene_rate_24h 0) as uid_pay_scene_rate_24h
-from t_sj_feature_uid;
 
 
 -- 24小时内的交易数，和部分离散变量的去重个数
 -- 4min32s
-drop table if exists t_sj_feature_user_24h;
+-- drop table if exists t_sj_feature_user_24h;
 
 
-create table t_sj_feature_user_24h as
-select t1.event_id,
-       count(*) as id_cnt_24h,
-       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
-       -- 3min7s
+-- create table t_sj_feature_user_24h as
+-- select t1.event_id,
+--        count(*) as id_cnt_24h,
+--        size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+--        -- 3min7s
 
-       size(collect_set(t2.network)) as id_ucnt_network_24h,
-       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
-       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
-       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
-       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
-       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
-from
-    (select event_id,
-            user_id,
-            gmt_occur_unix
-     from t_sj_train_data_code_unix) t1
-left outer join
-    (select event_id,
-            user_id,
-            gmt_occur_unix,
-            device_sign,
-            network,
-            client_ip,
-            ip_prov,
-            ip_city,
-            operation_channel,
-            pay_scene
-     from t_sj_train_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
-group by t1.event_id
+--        size(collect_set(t2.network)) as id_ucnt_network_24h,
+--        size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+--        size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+--        size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+--        size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+--        size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+-- from
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix
+--      from t_sj_train_data_code_unix) t1
+-- left outer join
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix,
+--             device_sign,
+--             network,
+--             client_ip,
+--             ip_prov,
+--             ip_city,
+--             operation_channel,
+--             pay_scene
+--      from t_sj_train_data_code_unix) t2 on t1.user_id = t2.user_id
+-- where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+--     and t2.gmt_occur_unix <=t1.gmt_occur_unix
+--     and t1.event_id != t2.event_id
+-- group by t1.event_id
 
 -- 24小时内的交易数，和部分离散变量的去重个数（不包括当前小时内数据）
 drop table if exists t_sj_feature_user_24h_not_now;
@@ -185,7 +111,7 @@ left outer join
             pay_scene
      from t_sj_train_data_code_unix) t2 on t1.user_id = t2.user_id
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
+    and t2.gmt_occur_unix < t1.gmt_occur_unix
     and t1.event_id != t2.event_id
 group by t1.event_id
 
@@ -250,11 +176,6 @@ where t1.gmt_occur_unix>=t2.gmt_occur_unix
     and t1.event_id !=t2.event_id
 group by t1.event_id,t2.user_id;
 
--- 熵0.052 
--- gini0.0115
--- info gain 0.0045
--- info gain ratio 0.0011
-
 
 -- 时间差表格
 drop table if exists t_sj_user_time_diff;
@@ -306,63 +227,7 @@ from t_sj_train_data_code_unix t1
 left outer join t_sj_user_last_time_not_now t2 on t1.event_id = t2.event_id
 
 
--- 计算每条样本中用户对应的离散变量在当前样本最近24h内的出现频率[0,1],没有出现为0
--- 3min内
-drop table if exists t_sj_user_scatter_freq_24h;
 
-
-create table t_sj_user_scatter_freq_24h as
-select t0.event_id,
-       case
-           when t2.uid_client_ip_cnt_24h is null then 0
-           else t2.uid_client_ip_cnt_24h/t1.id_cnt_24h
-       end as uid_client_ip_rate_24h,
-       case
-           when t3.uid_network_cnt_24h is null then 0
-           else t3.uid_network_cnt_24h/t1.id_cnt_24h
-       end as uid_network_rate_24h,
-       case
-           when t4.uid_device_sign_cnt_24h is null then 0
-           else t4.uid_device_sign_cnt_24h/t1.id_cnt_24h
-       end as uid_device_sign_rate_24h,
-       case
-           when t5.uid_ip_prov_cnt_24h is null then 0
-           else t5.uid_ip_prov_cnt_24h/t1.id_cnt_24h
-       end as uid_ip_prov_rate_24h,
-       case
-           when t6.uid_ip_city_cnt_24h is null then 0
-           else t6.uid_ip_city_cnt_24h/t1.id_cnt_24h
-       end as uid_ip_city_rate_24h,
-       case
-           when t7.uid_mobile_oper_platform_cnt_24h is null then 0
-           else t7.uid_mobile_oper_platform_cnt_24h/t1.id_cnt_24h
-       end as uid_mobile_oper_platform_rate_24h,
-       case
-           when t8.uid_operation_channel_cnt_24h is null then 0
-           else t8.uid_operation_channel_cnt_24h/t1.id_cnt_24h
-       end as uid_operation_channel_rate_24h,
-       case
-           when t9.uid_pay_scene_cnt_24h is null then 0
-           else t9.uid_pay_scene_cnt_24h/t1.id_cnt_24h
-       end as uid_pay_scene_rate_24h
-from t_sj_train_data_code_unix t0
-left outer join t_sj_feature_user_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_uid_client_ip_24h t2 on t0.event_id = t2.event_id
-and t0.client_ip = t2.client_ip
-left outer join t_sj_uid_network_24h t3 on t0.event_id = t3.event_id
-and t0.network = t3.network
-left outer join t_sj_uid_device_sign_24h t4 on t0.event_id = t4.event_id
-and t0.device_sign = t4.device_sign
-left outer join t_sj_uid_ip_prov_24h t5 on t0.event_id = t5.event_id
-and t0.ip_prov = t5.ip_prov
-left outer join t_sj_uid_ip_city_24h t6 on t0.event_id = t6.event_id
-and t0.ip_city = t6.ip_city
-left outer join t_sj_uid_mobile_oper_platform_24h t7 on t0.event_id = t7.event_id
-and t0.mobile_oper_platform = t7.mobile_oper_platform
-left outer join t_sj_uid_operation_channel_24h t8 on t0.event_id = t8.event_id
-and t0.operation_channel = t8.operation_channel
-left outer join t_sj_uid_pay_scene_24h t9 on t0.event_id = t9.event_id
-and t0.pay_scene = t9.pay_scene;
 
 
 ---------------------------------------------------离散变量的历史出现频率 每张表的执行时间约3min
@@ -566,102 +431,236 @@ where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
 group by t1.event_id,
          t2.pay_scene;
 ---------------------------------------------------离散变量的历史出现频率.
+-- 计算每条样本中用户对应的离散变量在当前样本最近24h内的出现频率[0,1],没有出现为0
+-- 3min内
+drop table if exists t_sj_user_scatter_freq_24h;
+
+
+create table t_sj_user_scatter_freq_24h as
+select t0.event_id,
+       case
+           when t2.uid_client_ip_cnt_24h is null then 0
+           else t2.uid_client_ip_cnt_24h/t1.id_cnt_24h
+       end as uid_client_ip_rate_24h,
+       case
+           when t3.uid_network_cnt_24h is null then 0
+           else t3.uid_network_cnt_24h/t1.id_cnt_24h
+       end as uid_network_rate_24h,
+       case
+           when t4.uid_device_sign_cnt_24h is null then 0
+           else t4.uid_device_sign_cnt_24h/t1.id_cnt_24h
+       end as uid_device_sign_rate_24h,
+       case
+           when t5.uid_ip_prov_cnt_24h is null then 0
+           else t5.uid_ip_prov_cnt_24h/t1.id_cnt_24h
+       end as uid_ip_prov_rate_24h,
+       case
+           when t6.uid_ip_city_cnt_24h is null then 0
+           else t6.uid_ip_city_cnt_24h/t1.id_cnt_24h
+       end as uid_ip_city_rate_24h,
+       case
+           when t7.uid_mobile_oper_platform_cnt_24h is null then 0
+           else t7.uid_mobile_oper_platform_cnt_24h/t1.id_cnt_24h
+       end as uid_mobile_oper_platform_rate_24h,
+       case
+           when t8.uid_operation_channel_cnt_24h is null then 0
+           else t8.uid_operation_channel_cnt_24h/t1.id_cnt_24h
+       end as uid_operation_channel_rate_24h,
+       case
+           when t9.uid_pay_scene_cnt_24h is null then 0
+           else t9.uid_pay_scene_cnt_24h/t1.id_cnt_24h
+       end as uid_pay_scene_rate_24h
+from t_sj_train_data_code_unix t0
+left outer join t_sj_feature_user_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_uid_client_ip_24h t2 on t0.event_id = t2.event_id
+and t0.client_ip = t2.client_ip
+left outer join t_sj_uid_network_24h t3 on t0.event_id = t3.event_id
+and t0.network = t3.network
+left outer join t_sj_uid_device_sign_24h t4 on t0.event_id = t4.event_id
+and t0.device_sign = t4.device_sign
+left outer join t_sj_uid_ip_prov_24h t5 on t0.event_id = t5.event_id
+and t0.ip_prov = t5.ip_prov
+left outer join t_sj_uid_ip_city_24h t6 on t0.event_id = t6.event_id
+and t0.ip_city = t6.ip_city
+left outer join t_sj_uid_mobile_oper_platform_24h t7 on t0.event_id = t7.event_id
+and t0.mobile_oper_platform = t7.mobile_oper_platform
+left outer join t_sj_uid_operation_channel_24h t8 on t0.event_id = t8.event_id
+and t0.operation_channel = t8.operation_channel
+left outer join t_sj_uid_pay_scene_24h t9 on t0.event_id = t9.event_id
+and t0.pay_scene = t9.pay_scene;
 
 
 
+drop table if exists t_sj_feature_uid;
+
+
+create table t_sj_feature_uid as
+select 
+t0.event_id,
+t1.id_cnt_24h,
+t1.id_ucnt_device_sign_24h,
+t1.id_ucnt_network_24h,
+t1.id_ucnt_client_ip_24h,
+t1.id_ucnt_ip_prov_24h,
+t1.id_ucnt_ip_city_24h,
+t1.id_ucnt_operation_channel_24h,
+t1.id_ucnt_pay_scene_24h
+t2.id_cnt_1h,
+t2.id_ucnt_device_sign_1h,
+t2.id_ucnt_network_1h,
+t2.id_ucnt_client_ip_1h,
+t2.id_ucnt_ip_prov_1h,
+t2.id_ucnt_ip_city_1h,
+t2.id_ucnt_operation_channel_1h,
+t2.id_ucnt_pay_scene_1h,
+t3.gmt_occur_unix_diff,
+t4.gmt_occur_unix_diff_not_now,
+t5.uid_client_ip_rate_24h,
+t5.uid_network_rate_24h,
+t5.uid_device_sign_rate_24h,
+t5.uid_ip_prov_rate_24h,
+t5.uid_ip_city_rate_24h,
+t5.uid_mobile_oper_platform_rate_24h,
+t5.uid_operation_channel_rate_24h,
+t5.uid_pay_scene_rate_24h
+ from 
+(select event_id from t_sj_train_data_code_unix) t0 
+left outer join t_sj_feature_user_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_feature_user_1h t2 on t0.event_id = t2.event_id
+left outer join t_sj_user_time_diff t3 on t0.event_id = t3.event_id
+left outer join t_sj_user_time_diff_not_now t4 on t0.event_id = t4.event_id
+left outer join t_sj_user_scatter_freq_24h t5 on t0.event_id = t5.event_id;
+
+
+-- 去除特征中的缺失值
+drop table if exists t_sj_feature_uid_notnull;
+
+
+create table t_sj_feature_uid_notnull as
+select 
+event_id,
+nvl(id_cnt_24h, 0) as id_cnt_24h
+nvl(id_ucnt_device_sign_24h, 0) as id_ucnt_device_sign_24h,
+nvl(id_ucnt_network_24h, 0) as id_ucnt_network_24h,
+nvl(id_ucnt_client_ip_24h, 0) as id_ucnt_client_ip_24h,
+nvl(id_ucnt_ip_prov_24h, 0) as id_ucnt_ip_prov_24h,
+nvl(id_ucnt_ip_city_24h, 0) as id_ucnt_ip_city_24h,
+nvl(id_ucnt_operation_channel_24h, 0) as id_ucnt_operation_channel_24h,
+nvl(id_ucnt_pay_scene_24h, 0) as id_ucnt_pay_scene_24h,
+nvl(id_cnt_1h, 0) as id_cnt_1h,
+nvl(id_ucnt_device_sign_1h, 0) as id_ucnt_device_sign_1h,
+nvl(id_ucnt_network_1h, 0) as id_ucnt_network_1h,
+nvl(id_ucnt_client_ip_1h, 0) as id_ucnt_client_ip_1h,
+nvl(id_ucnt_ip_prov_1h, 0) as id_ucnt_ip_prov_1h,
+nvl(id_ucnt_ip_city_1h, 0) as id_ucnt_ip_city_1h,
+nvl(id_ucnt_operation_channel_1h, 0) as id_ucnt_operation_channel_1h,
+nvl(id_ucnt_pay_scene_1h, 0) as id_ucnt_pay_scene_1h,
+nvl(gmt_occur_unix_diff, 0) as gmt_occur_unix_diff,
+nvl(gmt_occur_unix_diff_not_now, 0) as gmt_occur_unix_diff_not_now,
+nvl(uid_client_ip_rate_24h, 0) as uid_client_ip_rate_24h,
+nvl(uid_network_rate_24h, 0) as uid_network_rate_24h,
+nvl(uid_device_sign_rate_24h, 0) as uid_device_sign_rate_24h,
+nvl(uid_ip_prov_rate_24h, 0) as uid_ip_prov_rate_24h,
+nvl(uid_ip_city_rate_24h, 0) as uid_ip_city_rate_24h,
+nvl(uid_mobile_oper_platform_rate_24h, 0) as uid_mobile_oper_platform_rate_24h,
+nvl(uid_operation_channel_rate_24h, 0) as uid_operation_channel_rate_24h,
+nvl(uid_pay_scene_rate_24h 0) as uid_pay_scene_rate_24h
+from t_sj_feature_uid;
+
+--------------------------------------用户id特征统计 end------------------------------------------
 
 
 
-select *
-from
-    (select gmt_occur_unix_diff,
-            count(event_id) as cnt
-     from t_sj_user_last_time_not_now
-     group by gmt_occur_unix_diff)t
-where t.gmt_occur_unix_diff <10
+-- select *
+-- from
+--     (select gmt_occur_unix_diff,
+--             count(event_id) as cnt
+--      from t_sj_user_last_time_not_now
+--      group by gmt_occur_unix_diff)t
+-- where t.gmt_occur_unix_diff <10
 
----------------------------数据分析
+-- ---------------------------数据分析
 
--- 不同的用户不同的时间颗粒的交易次数 6573377 
-select count(distinct user_id, gmt_occur_unix) as ucnt
-from t_sj_train_data_code_unix;
--- 同一个小时交易数超过1次的交易笔数 1693267 
--- 同一个小时交易数为1次的交易笔数 4880110 2次1136806 3次301144
--- 4880110次交易中一小时内只有一次交易，其余都超过了一次
+-- -- 不同的用户不同的时间颗粒的交易次数 6573377 
+-- select count(distinct user_id, gmt_occur_unix) as ucnt
+-- from t_sj_train_data_code_unix;
+-- -- 同一个小时交易数超过1次的交易笔数 1693267 
+-- -- 同一个小时交易数为1次的交易笔数 4880110 2次1136806 3次301144
+-- -- 4880110次交易中一小时内只有一次交易，其余都超过了一次
 
-select count(*)
-from
-    (select user_id,
-            gmt_occur_unix,
-            count(*) as id_cnt
-     from t_sj_train_data_code_unix
-     group by user_id,
-              gmt_occur_unix)t
-where t.id_cnt >1;
+-- select count(*)
+-- from
+--     (select user_id,
+--             gmt_occur_unix,
+--             count(*) as id_cnt
+--      from t_sj_train_data_code_unix
+--      group by user_id,
+--               gmt_occur_unix)t
+-- where t.id_cnt >1;
 
--- 同一个小时交易数超过1次的笔数中负样本的个数 52998(包括1，-1)
--- 全量训练集中负样本个数 55608
--- 大部分的欺诈交易的发生时，同一小时内交易次数超过1次  
--- 因此重点关注一小时内的交易情况
-select count(*) as y1_cnt
-from
-    (select user_id,
-            gmt_occur_unix,
-            id_cnt
-     from
-         (select user_id,
-                 gmt_occur_unix,
-                 count(*) as id_cnt
-          from t_sj_train_data_code_unix
-          group by user_id,
-                   gmt_occur_unix)t
-     where t.id_cnt >1)t1
-left outer join
-    (select event_id,
-            user_id,
-            gmt_occur_unix,
-            is_fraud
-     from t_sj_train_data_code_unix)t2 on t1.user_id = t2.user_id
-and t1.gmt_occur_unix = t2.gmt_occur_unix
-where t2.is_fraud !=0
-
-
-select t1.event_id,
-       (max(t1.gmt_occur_unix) - max(t2.gmt_occur_unix)) as gmt_occur_unix_diff
-from
-    (select event_id,
-            user_id,
-            gmt_occur_unix
-     from t_sj_train_data_code_unix)t1
-left outer join
-    (select event_id,
-            user_id,
-            gmt_occur_unix
-     from t_sj_train_data_code_unix)t2 on t1.user_id = t2.user_id
-where t1.gmt_occur_unix>=t2.gmt_occur_unix
-    and t1.event_id !=t2.event_id
-group by t1.event_id;
-
--- 获取用户上一次的时间点 有记录的是9444000 去掉了用户第一次交易的记录
-drop table if exists t_sj_user_last_time;
+-- -- 同一个小时交易数超过1次的笔数中负样本的个数 52998(包括1，-1)
+-- -- 全量训练集中负样本个数 55608
+-- -- 大部分的欺诈交易的发生时，同一小时内交易次数超过1次  
+-- -- 因此重点关注一小时内的交易情况
+-- select count(*) as y1_cnt
+-- from
+--     (select user_id,
+--             gmt_occur_unix,
+--             id_cnt
+--      from
+--          (select user_id,
+--                  gmt_occur_unix,
+--                  count(*) as id_cnt
+--           from t_sj_train_data_code_unix
+--           group by user_id,
+--                    gmt_occur_unix)t
+--      where t.id_cnt >1)t1
+-- left outer join
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix,
+--             is_fraud
+--      from t_sj_train_data_code_unix)t2 on t1.user_id = t2.user_id
+-- and t1.gmt_occur_unix = t2.gmt_occur_unix
+-- where t2.is_fraud !=0
 
 
-create table t_sj_user_last_time as
-select t1.event_id,
-        t2.user_id,
-       max(t2.gmt_occur_unix) as gmt_occur_unix_last
-from
-    (select event_id,
-            user_id,
-            gmt_occur_unix
-     from t_sj_train_data_code_unix)t1
-left outer join
-    (select event_id,
-            user_id,
-            gmt_occur_unix
-     from t_sj_train_data_code_unix)t2 on t1.user_id = t2.user_id
-where t1.gmt_occur_unix>=t2.gmt_occur_unix
-    and t1.event_id !=t2.event_id
-group by t1.event_id,t2.user_id;
+-- select t1.event_id,
+--        (max(t1.gmt_occur_unix) - max(t2.gmt_occur_unix)) as gmt_occur_unix_diff
+-- from
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix
+--      from t_sj_train_data_code_unix)t1
+-- left outer join
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix
+--      from t_sj_train_data_code_unix)t2 on t1.user_id = t2.user_id
+-- where t1.gmt_occur_unix>=t2.gmt_occur_unix
+--     and t1.event_id !=t2.event_id
+-- group by t1.event_id;
+
+-- -- 获取用户上一次的时间点 有记录的是9444000 去掉了用户第一次交易的记录
+-- drop table if exists t_sj_user_last_time;
+
+
+-- create table t_sj_user_last_time as
+-- select t1.event_id,
+--         t2.user_id,
+--        max(t2.gmt_occur_unix) as gmt_occur_unix_last
+-- from
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix
+--      from t_sj_train_data_code_unix)t1
+-- left outer join
+--     (select event_id,
+--             user_id,
+--             gmt_occur_unix
+--      from t_sj_train_data_code_unix)t2 on t1.user_id = t2.user_id
+-- where t1.gmt_occur_unix>=t2.gmt_occur_unix
+--     and t1.event_id !=t2.event_id
+-- group by t1.event_id,t2.user_id;
 
 

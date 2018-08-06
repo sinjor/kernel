@@ -78,6 +78,55 @@ factor-- income_card_mobile 虚拟收款用户的手机号 0.99
 --     and t1.event_id != t2.event_id
 -- group by t1.event_id
 
+-- 测试集中运行时间超过3个小时，原因在于有一个人的交易记录过多，导致笛卡尔积计算负荷太大
+-- user_id:781856 次数：136321
+select *
+from
+    (select user_id,
+            count(*) as uid_cnt
+     from t_sj_test_data_code_unix
+     group by user_id) t
+order by uid_cnt desc; 
+
+-- 训练集中单人交易记录最大的是18000，计算时间在4min之内
+select *
+from
+    (select user_id,
+            count(*) as uid_cnt
+     from t_sj_train_data_code_unix
+     group by user_id) t
+order by uid_cnt desc;
+
+-- 计算这个交易次数过得的人的交易分布是否在每一天
+-- 结果是31，说明每天都有交易记录，因此在计算时间间隔时可以加入时间区间限制，减少资源消耗
+select count(distinct day)
+from
+    (select cast(substr(gmt_occur,9,2) as bigint) as day
+     from t_sj_test_data_code_unix
+     where user_id = 781856) t
+
+select day, count(*) as cnt
+from
+    (select cast(substr(gmt_occur,9,2) as bigint) as day
+     from t_sj_test_data_code_unix
+     where user_id = 781856) t group by day;
+
+
+
+
+-----------------------------------------用户变量计算begin-------------------------------
+-- 1515081600 20180105
+-- 1515513600 20180110
+-- 1515945600 20180115
+-- 1516377600 20180120
+-- 1516809600 20180125
+-- 1517241600 20180130
+-- 超大记录的优化方式 分时间段进行统计，先确认每天都有记录
+-- 分时段单独对781856进行计算后合并，时间约2min30s
+-- 不分时段单独对781856进行计算，半小时未完成
+-- 分时段单独对781856进行计算
+-- select count(*) from t_sj_test_user_last_time_781856;
+
 -- 24小时内的交易数，和部分离散变量的去重个数（不包括当前小时内数据）
 drop table if exists t_sj_test_feature_user_24h_not_now;
 
@@ -86,8 +135,6 @@ create table t_sj_test_feature_user_24h_not_now as
 select t1.event_id,
        count(*) as id_cnt_24h,
        size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
-       -- 3min7s
-
        size(collect_set(t2.network)) as id_ucnt_network_24h,
        size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
        size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
@@ -98,7 +145,9 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
@@ -110,10 +159,227 @@ left outer join
             ip_city,
             operation_channel,
             pay_scene
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id
+union
+select t1.event_id,
+       count(*) as id_cnt_24h,
+       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+       size(collect_set(t2.network)) as id_ucnt_network_24h,
+       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign,
+            network,
+            client_ip,
+            ip_prov,
+            ip_city,
+            operation_channel,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id
+union
+select t1.event_id,
+       count(*) as id_cnt_24h,
+       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+       size(collect_set(t2.network)) as id_ucnt_network_24h,
+       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign,
+            network,
+            client_ip,
+            ip_prov,
+            ip_city,
+            operation_channel,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id
+union
+select t1.event_id,
+       count(*) as id_cnt_24h,
+       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+       size(collect_set(t2.network)) as id_ucnt_network_24h,
+       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign,
+            network,
+            client_ip,
+            ip_prov,
+            ip_city,
+            operation_channel,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id
+union
+select t1.event_id,
+       count(*) as id_cnt_24h,
+       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+       size(collect_set(t2.network)) as id_ucnt_network_24h,
+       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign,
+            network,
+            client_ip,
+            ip_prov,
+            ip_city,
+            operation_channel,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id
+union
+select t1.event_id,
+       count(*) as id_cnt_24h,
+       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+       size(collect_set(t2.network)) as id_ucnt_network_24h,
+       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign,
+            network,
+            client_ip,
+            ip_prov,
+            ip_city,
+            operation_channel,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id
+union
+select t1.event_id,
+       count(*) as id_cnt_24h,
+       size(collect_set(t2.device_sign)) as id_ucnt_device_sign_24h,
+       size(collect_set(t2.network)) as id_ucnt_network_24h,
+       size(collect_set(t2.client_ip)) as id_ucnt_client_ip_24h,
+       size(collect_set(t2.ip_prov)) as id_ucnt_ip_prov_24h,
+       size(collect_set(t2.ip_city)) as id_ucnt_ip_city_24h,
+       size(collect_set(t2.operation_channel)) as id_ucnt_operation_channel_24h,
+       size(collect_set(t2.pay_scene)) as id_ucnt_pay_scene_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign,
+            network,
+            client_ip,
+            ip_prov,
+            ip_city,
+            operation_channel,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id;
 
 
@@ -156,31 +422,176 @@ group by t1.event_id;
 
 
 -- 获取用户上一次的时间点 有记录的是9444000 去掉了用户第一次交易的记录
-drop table if exists t_sj_user_last_time;
+
+drop table if exists t_sj_test_user_last_time;
 
 
-create table t_sj_user_last_time as
+create table t_sj_test_user_last_time as
 select t1.event_id,
-        t2.user_id,
+       t2.user_id,
        max(t2.gmt_occur_unix) as gmt_occur_unix_last
 from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix)t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix)t2 on t1.user_id = t2.user_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
 where t1.gmt_occur_unix>=t2.gmt_occur_unix
     and t1.event_id !=t2.event_id
-group by t1.event_id,t2.user_id;
-
--- 熵0.052 
--- gini0.0115
--- info gain 0.0045
--- info gain ratio 0.0011
+group by t1.event_id,
+         t2.user_id;
 
 
 -- 时间差表格
@@ -191,30 +602,179 @@ create table t_sj_test_user_time_diff as
 select t1.event_id,
        (t1.gmt_occur_unix - t2.gmt_occur_unix_last)/3600 as gmt_occur_unix_diff
 from t_sj_test_data_code_unix t1
-left outer join t_sj_user_last_time t2 on t1.event_id = t2.event_id;
+left outer join t_sj_test_user_last_time t2 on t1.event_id = t2.event_id;
 
 -------------------- 获取用户上一次的时间点(去除同一个小时的记录)
--- 6min15s
-drop table if exists t_sj_user_last_time_not_now;
+drop table if exists t_sj_test_user_last_time_not_now;
 
 
-create table t_sj_user_last_time_not_now as
+create table t_sj_test_user_last_time_not_now as
 select t1.event_id,
-        t2.user_id,
+       t2.user_id,
        max(t2.gmt_occur_unix) as gmt_occur_unix_last
 from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix)t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix)t2 on t1.user_id = t2.user_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.user_id
+union
+select t1.event_id,
+       t2.user_id,
+       max(t2.gmt_occur_unix) as gmt_occur_unix_last
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
 where t1.gmt_occur_unix>t2.gmt_occur_unix
     and t1.event_id !=t2.event_id
-group by t1.event_id,t2.user_id;
+group by t1.event_id,
+         t2.user_id;
+
 
 -- 时间差表格
 drop table if exists t_sj_test_user_time_diff_not_now;
@@ -224,14 +784,13 @@ create table t_sj_test_user_time_diff_not_now as
 select t1.event_id,
        (t1.gmt_occur_unix - t2.gmt_occur_unix_last)/3600 as gmt_occur_unix_diff_not_now
 from t_sj_test_data_code_unix t1
-left outer join t_sj_user_last_time_not_now t2 on t1.event_id = t2.event_id;
-
-
+left outer join t_sj_test_user_last_time_not_now t2 on t1.event_id = t2.event_id;
 
 
 
 ---------------------------------------------------离散变量的历史出现频率 每张表的执行时间约3min
 -- 过去24小时内ip对应的使用个数
+
 drop table if exists t_sj_test_uid_client_ip_24h;
 
 
@@ -243,16 +802,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             client_ip
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.client_ip
+union
+select t1.event_id,
+       t2.client_ip,
+       count(*) as uid_client_ip_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            client_ip
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.client_ip
+union
+select t1.event_id,
+       t2.client_ip,
+       count(*) as uid_client_ip_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            client_ip
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.client_ip
+union
+select t1.event_id,
+       t2.client_ip,
+       count(*) as uid_client_ip_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            client_ip
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.client_ip
+union
+select t1.event_id,
+       t2.client_ip,
+       count(*) as uid_client_ip_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            client_ip
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.client_ip
+union
+select t1.event_id,
+       t2.client_ip,
+       count(*) as uid_client_ip_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            client_ip
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.client_ip
+union
+select t1.event_id,
+       t2.client_ip,
+       count(*) as uid_client_ip_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            client_ip
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.client_ip;
 
@@ -268,16 +980,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             network
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.network
+union
+select t1.event_id,
+       t2.network,
+       count(*) as uid_network_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            network
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.network
+union
+select t1.event_id,
+       t2.network,
+       count(*) as uid_network_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            network
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.network
+union
+select t1.event_id,
+       t2.network,
+       count(*) as uid_network_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            network
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.network
+union
+select t1.event_id,
+       t2.network,
+       count(*) as uid_network_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            network
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.network
+union
+select t1.event_id,
+       t2.network,
+       count(*) as uid_network_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            network
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.network
+union
+select t1.event_id,
+       t2.network,
+       count(*) as uid_network_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            network
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.network;
 
@@ -293,16 +1158,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             device_sign
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.device_sign
+union
+select t1.event_id,
+       t2.device_sign,
+       count(*) as uid_device_sign_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.device_sign
+union
+select t1.event_id,
+       t2.device_sign,
+       count(*) as uid_device_sign_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.device_sign
+union
+select t1.event_id,
+       t2.device_sign,
+       count(*) as uid_device_sign_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.device_sign
+union
+select t1.event_id,
+       t2.device_sign,
+       count(*) as uid_device_sign_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.device_sign
+union
+select t1.event_id,
+       t2.device_sign,
+       count(*) as uid_device_sign_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.device_sign
+union
+select t1.event_id,
+       t2.device_sign,
+       count(*) as uid_device_sign_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            device_sign
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.device_sign;
 
@@ -318,16 +1336,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             ip_prov
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_prov
+union
+select t1.event_id,
+       t2.ip_prov,
+       count(*) as uid_ip_prov_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_prov
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_prov
+union
+select t1.event_id,
+       t2.ip_prov,
+       count(*) as uid_ip_prov_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_prov
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_prov
+union
+select t1.event_id,
+       t2.ip_prov,
+       count(*) as uid_ip_prov_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_prov
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_prov
+union
+select t1.event_id,
+       t2.ip_prov,
+       count(*) as uid_ip_prov_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_prov
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_prov
+union
+select t1.event_id,
+       t2.ip_prov,
+       count(*) as uid_ip_prov_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_prov
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_prov
+union
+select t1.event_id,
+       t2.ip_prov,
+       count(*) as uid_ip_prov_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_prov
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.ip_prov;
 
@@ -343,16 +1514,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             ip_city
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_city
+union
+select t1.event_id,
+       t2.ip_city,
+       count(*) as uid_ip_city_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_city
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_city
+union
+select t1.event_id,
+       t2.ip_city,
+       count(*) as uid_ip_city_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_city
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_city
+union
+select t1.event_id,
+       t2.ip_city,
+       count(*) as uid_ip_city_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_city
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_city
+union
+select t1.event_id,
+       t2.ip_city,
+       count(*) as uid_ip_city_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_city
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_city
+union
+select t1.event_id,
+       t2.ip_city,
+       count(*) as uid_ip_city_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_city
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.ip_city
+union
+select t1.event_id,
+       t2.ip_city,
+       count(*) as uid_ip_city_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            ip_city
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.ip_city;
 
@@ -368,16 +1692,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             mobile_oper_platform
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.mobile_oper_platform
+union
+select t1.event_id,
+       t2.mobile_oper_platform,
+       count(*) as uid_mobile_oper_platform_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            mobile_oper_platform
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.mobile_oper_platform
+union
+select t1.event_id,
+       t2.mobile_oper_platform,
+       count(*) as uid_mobile_oper_platform_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            mobile_oper_platform
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.mobile_oper_platform
+union
+select t1.event_id,
+       t2.mobile_oper_platform,
+       count(*) as uid_mobile_oper_platform_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            mobile_oper_platform
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.mobile_oper_platform
+union
+select t1.event_id,
+       t2.mobile_oper_platform,
+       count(*) as uid_mobile_oper_platform_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            mobile_oper_platform
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.mobile_oper_platform
+union
+select t1.event_id,
+       t2.mobile_oper_platform,
+       count(*) as uid_mobile_oper_platform_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            mobile_oper_platform
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.mobile_oper_platform
+union
+select t1.event_id,
+       t2.mobile_oper_platform,
+       count(*) as uid_mobile_oper_platform_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            mobile_oper_platform
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.mobile_oper_platform;
 
@@ -393,16 +1870,169 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             operation_channel
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.operation_channel
+union
+select t1.event_id,
+       t2.operation_channel,
+       count(*) as uid_operation_channel_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            operation_channel
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.operation_channel
+union
+select t1.event_id,
+       t2.operation_channel,
+       count(*) as uid_operation_channel_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            operation_channel
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.operation_channel
+union
+select t1.event_id,
+       t2.operation_channel,
+       count(*) as uid_operation_channel_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            operation_channel
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.operation_channel
+union
+select t1.event_id,
+       t2.operation_channel,
+       count(*) as uid_operation_channel_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            operation_channel
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.operation_channel
+union
+select t1.event_id,
+       t2.operation_channel,
+       count(*) as uid_operation_channel_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            operation_channel
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.operation_channel
+union
+select t1.event_id,
+       t2.operation_channel,
+       count(*) as uid_operation_channel_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            operation_channel
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.operation_channel;
 
@@ -418,18 +2048,172 @@ from
     (select event_id,
             user_id,
             gmt_occur_unix
-     from t_sj_test_data_code_unix) t1
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t1
 left outer join
     (select event_id,
             user_id,
             gmt_occur_unix,
             pay_scene
-     from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
-where (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
-    and t2.gmt_occur_unix <=t1.gmt_occur_unix
-    and t1.event_id != t2.event_id
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix <= 1515513600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.pay_scene
+union
+select t1.event_id,
+       t2.pay_scene,
+       count(*) as uid_pay_scene_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515513600
+         and gmt_occur_unix <= 1515945600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515513600 - 86400)
+         and gmt_occur_unix <= 1515945600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.pay_scene
+union
+select t1.event_id,
+       t2.pay_scene,
+       count(*) as uid_pay_scene_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1515945600
+         and gmt_occur_unix <= 1516377600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1515945600 - 86400)
+         and gmt_occur_unix <= 1516377600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.pay_scene
+union
+select t1.event_id,
+       t2.pay_scene,
+       count(*) as uid_pay_scene_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516377600
+         and gmt_occur_unix <= 1516809600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516377600 - 86400)
+         and gmt_occur_unix <= 1516809600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.pay_scene
+union
+select t1.event_id,
+       t2.pay_scene,
+       count(*) as uid_pay_scene_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1516809600
+         and gmt_occur_unix <= 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1516809600 - 86400)
+         and gmt_occur_unix <= 1517241600)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.pay_scene
+union
+select t1.event_id,
+       t2.pay_scene,
+       count(*) as uid_pay_scene_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > 1517241600)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id = 781856
+         and gmt_occur_unix > (1517241600 - 86400))t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and (t1.gmt_occur_unix - t2.gmt_occur_unix) < 86400
+    and t1.event_id !=t2.event_id
+group by t1.event_id,
+         t2.pay_scene
+union
+select t1.event_id,
+       t2.pay_scene,
+       count(*) as uid_pay_scene_cnt_24h
+from
+    (select event_id,
+            user_id,
+            gmt_occur_unix
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t1
+left outer join
+    (select event_id,
+            user_id,
+            gmt_occur_unix,
+            pay_scene
+     from t_sj_test_data_code_unix
+     where user_id != 781856)t2 on t1.user_id = t2.user_id
+where t1.gmt_occur_unix>=t2.gmt_occur_unix
+    and t1.event_id !=t2.event_id
 group by t1.event_id,
          t2.pay_scene;
+
 ---------------------------------------------------离散变量的历史出现频率.
 
 -- 计算每条样本中用户对应的离散变量在当前样本最近24h内的出现频率[0,1],没有出现为0
@@ -574,7 +2358,7 @@ from t_sj_test_feature_uid;
 -- from
 --     (select gmt_occur_unix_diff,
 --             count(event_id) as cnt
---      from t_sj_user_last_time_not_now
+--      from t_sj_test_user_last_time_not_now
 --      group by gmt_occur_unix_diff)t
 -- where t.gmt_occur_unix_diff <10
 
@@ -641,10 +2425,10 @@ from t_sj_test_feature_uid;
 -- group by t1.event_id;
 
 -- -- 获取用户上一次的时间点 有记录的是9444000 去掉了用户第一次交易的记录
--- drop table if exists t_sj_user_last_time;
+-- drop table if exists t_sj_test_user_last_time;
 
 
--- create table t_sj_user_last_time as
+-- create table t_sj_test_user_last_time as
 -- select t1.event_id,
 --         t2.user_id,
 --        max(t2.gmt_occur_unix) as gmt_occur_unix_last
