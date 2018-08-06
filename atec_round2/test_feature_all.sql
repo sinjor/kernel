@@ -45,8 +45,21 @@ select t1.event_id,
        --     when t3.is_fraud = 0 then 0
        --     else 1
        -- end as label
-from t_sj_feature_base t1
-left outer join t_sj_feature_uid_notnull t2 on t1.event_id = t2.event_id;
+from t_sj_test_feature_base t1
+left outer join t_sj_test_feature_uid_notnull t2 on t1.event_id = t2.event_id;
+
+
+ drop table if exists result;
+
+
+create table result as
+select event_id as id,
+       (1 - prediction_score) as score
+from result_0806;
+
+
+
+ 
 -- left outer join
 --     (select event_id,
 --             is_fraud
