@@ -504,7 +504,7 @@ t1.id_ucnt_client_ip_24h,
 t1.id_ucnt_ip_prov_24h,
 t1.id_ucnt_ip_city_24h,
 t1.id_ucnt_operation_channel_24h,
-t1.id_ucnt_pay_scene_24h
+t1.id_ucnt_pay_scene_24h,
 t2.id_cnt_1h,
 t2.id_ucnt_device_sign_1h,
 t2.id_ucnt_network_1h,
@@ -539,7 +539,7 @@ drop table if exists t_sj_feature_uid_notnull;
 create table t_sj_feature_uid_notnull as
 select 
 event_id,
-nvl(id_cnt_24h, 0) as id_cnt_24h
+nvl(id_cnt_24h, 0) as id_cnt_24h,
 nvl(id_ucnt_device_sign_24h, 0) as id_ucnt_device_sign_24h,
 nvl(id_ucnt_network_24h, 0) as id_ucnt_network_24h,
 nvl(id_ucnt_client_ip_24h, 0) as id_ucnt_client_ip_24h,
@@ -564,7 +564,7 @@ nvl(uid_ip_prov_rate_24h, 0) as uid_ip_prov_rate_24h,
 nvl(uid_ip_city_rate_24h, 0) as uid_ip_city_rate_24h,
 nvl(uid_mobile_oper_platform_rate_24h, 0) as uid_mobile_oper_platform_rate_24h,
 nvl(uid_operation_channel_rate_24h, 0) as uid_operation_channel_rate_24h,
-nvl(uid_pay_scene_rate_24h 0) as uid_pay_scene_rate_24h
+nvl(uid_pay_scene_rate_24h, 0) as uid_pay_scene_rate_24h
 from t_sj_feature_uid;
 
 --------------------------------------用户id特征统计 end------------------------------------------
