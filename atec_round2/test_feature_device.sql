@@ -247,7 +247,7 @@ drop table if exists t_sj_test_device_user_id_24h;
 create table t_sj_test_device_user_id_24h as
 select t1.event_id,
        t2.user_id,
-       count(*) as device_device_sign_cnt_24h
+       count(*) as device_user_id_cnt_24h
 from
     (select event_id,
             device_sign,
@@ -418,9 +418,9 @@ select t0.event_id,
            else t3.device_network_cnt_24h/t1.device_cnt_24h
        end as device_network_rate_24h,
        case
-           when t4.device_device_sign_cnt_24h is null then 0
-           else t4.device_device_sign_cnt_24h/t1.device_cnt_24h
-       end as device_device_sign_rate_24h,
+           when t4.device_user_id_cnt_24h is null then 0
+           else t4.device_user_id_cnt_24h/t1.device_cnt_24h
+       end as device_user_id_rate_24h,
        case
            when t5.device_ip_prov_cnt_24h is null then 0
            else t5.device_ip_prov_cnt_24h/t1.device_cnt_24h
@@ -487,7 +487,7 @@ t3.gmt_occur_unix_device_diff,
 t4.gmt_occur_unix_device_diff_not_now,
 t5.device_client_ip_rate_24h,
 t5.device_network_rate_24h,
-t5.device_device_sign_rate_24h,
+t5.device_user_id_rate_24h,
 t5.device_ip_prov_rate_24h,
 t5.device_ip_city_rate_24h,
 t5.device_mobile_oper_platform_rate_24h,
@@ -529,7 +529,7 @@ nvl(gmt_occur_unix_device_diff, 0) as gmt_occur_unix_device_diff,
 nvl(gmt_occur_unix_device_diff_not_now, 24) as gmt_occur_unix_device_diff_not_now,
 nvl(device_client_ip_rate_24h, 24) as device_client_ip_rate_24h,
 nvl(device_network_rate_24h, 0) as device_network_rate_24h,
-nvl(device_device_sign_rate_24h, 0) as device_device_sign_rate_24h,
+nvl(device_user_id_rate_24h, 0) as device_user_id_rate_24h,
 nvl(device_ip_prov_rate_24h, 0) as device_ip_prov_rate_24h,
 nvl(device_ip_city_rate_24h, 0) as device_ip_city_rate_24h,
 nvl(device_mobile_oper_platform_rate_24h, 0) as device_mobile_oper_platform_rate_24h,

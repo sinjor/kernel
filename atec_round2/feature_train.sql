@@ -1,7 +1,12 @@
 drop table if exists t_sj_train_feature_data;
 
+
 create table t_sj_train_feature_data as
-select t1.event_id,
+select case
+           when t0.is_fraud = 0 then 0
+           else 1
+       end as label,
+       t1.event_id,
        t1.gmt_occur,
        t1.hour,
        t1.hour_bin,
@@ -41,16 +46,40 @@ select t1.event_id,
        t2.uid_operation_channel_rate_24h,
        t2.uid_pay_scene_rate_24h,
 
-       case
-           when t3.is_fraud = 0 then 0
-           else 1
-       end as label
-from t_sj_feature_base t1
-left outer join t_sj_feature_uid_notnull t2 on t1.event_id = t2.event_id
-left outer join
+       t3.device_cnt_24h,
+       t3.device_ucnt_user_id_24h,
+       t3.device_ucnt_network_24h,
+       t3.device_ucnt_client_ip_24h,
+       t3.device_ucnt_ip_prov_24h,
+       t3.device_ucnt_ip_city_24h,
+       t3.device_ucnt_operation_channel_24h,
+       t3.device_ucnt_pay_scene_24h,
+       t3.device_cnt_1h,
+       t3.device_ucnt_user_id_1h,
+       t3.device_ucnt_network_1h,
+       t3.device_ucnt_client_ip_1h,
+       t3.device_ucnt_ip_prov_1h,
+       t3.device_ucnt_ip_city_1h,
+       t3.device_ucnt_operation_channel_1h,
+       t3.device_ucnt_pay_scene_1h,
+       t3.gmt_occur_unix_device_diff,
+       t3.gmt_occur_unix_device_diff_not_now,
+       t3.device_client_ip_rate_24h,
+       t3.device_network_rate_24h,
+       t3.device_device_sign_rate_24h,
+       t3.device_ip_prov_rate_24h,
+       t3.device_ip_city_rate_24h,
+       t3.device_mobile_oper_platform_rate_24h,
+       t3.device_operation_channel_rate_24h,
+       t3.device_pay_scene_rate_24h
+from
     (select event_id,
             is_fraud
-     from t_sj_train_data_code_unix) t3 on t1.event_id = t3.event_id;
+     from t_sj_train_data_code_unix) t0
+left outer join t_sj_feature_base t1 on t1.event_id = t0.event_id
+left outer join t_sj_feature_uid_notnull t2 on t1.event_id = t2.event_id
+left outer join t_sj_feature_device_notnull t3 on t1.event_id = t3.event_id;
+    
 
 drop table if exists t_sj_train_dataset;
 
