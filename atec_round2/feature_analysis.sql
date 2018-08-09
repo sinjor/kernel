@@ -337,7 +337,163 @@ select "version" as name,
        count(distinct version) as unique_cnt
 from t_sj_train_data_code;
 
+drop table if exists t_sj_train_code_analysis_pay_scene;
 
+create table t_sj_train_code_analysis_pay_scene as
+select "user_id" as name,
+       count(user_id) as cnt,
+       count(distinct user_id) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "client_ip" as name,
+       count(client_ip) as cnt,
+       count(distinct client_ip) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "network" as name,
+       count(network) as cnt,
+       count(distinct network) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "device_sign" as name,
+       count(device_sign) as cnt,
+       count(distinct device_sign) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "info_1" as name,
+       count(info_1) as cnt,
+       count(distinct info_1) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "info_2" as name,
+       count(info_2) as cnt,
+       count(distinct info_2) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "ip_prov" as name,
+       count(ip_prov) as cnt,
+       count(distinct ip_prov) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "ip_city" as name,
+       count(ip_city) as cnt,
+       count(distinct ip_city) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "cert_prov" as name,
+       count(cert_prov) as cnt,
+       count(distinct cert_prov) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "cert_city" as name,
+       count(cert_city) as cnt,
+       count(distinct cert_city) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_bin_prov" as name,
+       count(card_bin_prov) as cnt,
+       count(distinct card_bin_prov) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_bin_city" as name,
+       count(card_bin_city) as cnt,
+       count(distinct card_bin_city) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_mobile_prov" as name,
+       count(card_mobile_prov) as cnt,
+       count(distinct card_mobile_prov) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_mobile_city" as name,
+       count(card_mobile_city) as cnt,
+       count(distinct card_mobile_city) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_cert_prov" as name,
+       count(card_cert_prov) as cnt,
+       count(distinct card_cert_prov) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_cert_city" as name,
+       count(card_cert_city) as cnt,
+       count(distinct card_cert_city) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "is_one_people" as name,
+       count(is_one_people) as cnt,
+       count(distinct is_one_people) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "mobile_oper_platform" as name,
+       count(mobile_oper_platform) as cnt,
+       count(distinct mobile_oper_platform) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "operation_channel" as name,
+       count(operation_channel) as cnt,
+       count(distinct operation_channel) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "pay_scene" as name,
+       count(pay_scene) as cnt,
+       count(distinct pay_scene) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "amt" as name,
+       count(amt) as cnt,
+       count(distinct amt) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "card_cert_no" as name,
+       count(card_cert_no) as cnt,
+       count(distinct card_cert_no) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "opposing_id" as name,
+       count(opposing_id) as cnt,
+       count(distinct opposing_id) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "income_card_no" as name,
+       count(income_card_no) as cnt,
+       count(distinct income_card_no) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "income_card_cert_no" as name,
+       count(income_card_cert_no) as cnt,
+       count(distinct income_card_cert_no) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "income_card_mobile" as name,
+       count(income_card_mobile) as cnt,
+       count(distinct income_card_mobile) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "income_card_bank_code" as name,
+       count(income_card_bank_code) as cnt,
+       count(distinct income_card_bank_code) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "province" as name,
+       count(province) as cnt,
+       count(distinct province) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "city" as name,
+       count(city) as cnt,
+       count(distinct city) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "is_peer_pay" as name,
+       count(is_peer_pay) as cnt,
+       count(distinct is_peer_pay) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18
+union
+select "version" as name,
+       count(version) as cnt,
+       count(distinct version) as unique_cnt
+from t_sj_train_data_code where pay_scene!=12 and pay_scene!=18;
 
 drop table if exists t_sj_train_code_analysis_with_miss;
 
@@ -351,6 +507,9 @@ from t_sj_train_code_analysis;
 
 
 -- 支不同付场景的正负样本比例
+-- 12 18场景下的好人比例最高 
+-- 12 0:1 459360:38=12088
+-- 18 0:1 243135:4=60783
 select t1.pay_scene,
        t2.y0_cnt,
        t3.y1_cnt,
