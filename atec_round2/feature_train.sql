@@ -71,14 +71,44 @@ select case
        t3.device_ip_city_rate_24h,
        t3.device_mobile_oper_platform_rate_24h,
        t3.device_operation_channel_rate_24h,
-       t3.device_pay_scene_rate_24h
+       t3.device_pay_scene_rate_24h,
+
+              t4.oppo_cnt_24h,
+       t4.oppo_ucnt_user_id_24h,
+       t4.oppo_ucnt_client_ip_24h,
+       t4.oppo_ucnt_network_24h,
+       t4.oppo_ucnt_device_sign_24h,
+       t4.oppo_ucnt_info_1_24h,
+       t4.oppo_ucnt_info_2_24h,
+       t4.oppo_ucnt_ip_prov_24h,
+       t4.oppo_ucnt_ip_city_24h,
+       t4.oppo_ucnt_mobile_oper_platform_24h,
+       t4.oppo_ucnt_operation_channel_24h,
+       t4.oppo_ucnt_pay_scene_24h,
+       t4.oppo_sum_amt_24h,
+       t4.oppo_cnt_1h,
+       t4.oppo_ucnt_user_id_1h,
+       t4.oppo_ucnt_client_ip_1h,
+       t4.oppo_ucnt_network_1h,
+       t4.oppo_ucnt_device_sign_1h,
+       t4.oppo_ucnt_info_1_1h,
+       t4.oppo_ucnt_info_2_1h,
+       t4.oppo_ucnt_ip_prov_1h,
+       t4.oppo_ucnt_ip_city_1h,
+       t4.oppo_ucnt_mobile_oper_platform_1h,
+       t4.oppo_ucnt_operation_channel_1h,
+       t4.oppo_ucnt_pay_scene_1h,
+       t4.oppo_sum_amt_1h,
+       t4.gmt_occur_unix_oppo_diff_not_now
+from t_sj_test_feature_base t1
 from
     (select event_id,
             is_fraud
      from t_sj_train_data_code_unix) t0
 left outer join t_sj_feature_base t1 on t1.event_id = t0.event_id
 left outer join t_sj_feature_uid_notnull t2 on t1.event_id = t2.event_id
-left outer join t_sj_feature_device_notnull t3 on t1.event_id = t3.event_id;
+left outer join t_sj_feature_device_notnull t3 on t1.event_id = t3.event_id
+left outer join t_sj_train_feature_oppo_notnull t4 on t1.event_id = t4.event_id;
     
 
 drop table if exists t_sj_train_dataset;

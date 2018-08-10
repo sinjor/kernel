@@ -195,3 +195,83 @@ left outer join
      group by t1.opposing_id,
               t1.gmt_occur_unix) t4 on t3.opposing_id = t4.opposing_id
 and t3.gmt_occur_unix = t4.gmt_occur_unix;
+
+
+
+
+drop table if exists t_sj_test_feature_oppo;
+
+
+create table t_sj_test_feature_oppo as
+select 
+t0.event_id,
+t1.oppo_cnt_24h,
+t1.oppo_ucnt_user_id_24h,
+t1.oppo_ucnt_client_ip_24h,
+t1.oppo_ucnt_network_24h,
+t1.oppo_ucnt_device_sign_24h,
+t1.oppo_ucnt_info_1_24h,
+t1.oppo_ucnt_info_2_24h,
+t1.oppo_ucnt_ip_prov_24h,
+t1.oppo_ucnt_ip_city_24h,
+t1.oppo_ucnt_mobile_oper_platform_24h,
+t1.oppo_ucnt_operation_channel_24h,
+t1.oppo_ucnt_pay_scene_24h,
+t1.oppo_sum_amt_24h,
+
+t2.oppo_cnt_1h,
+t2.oppo_ucnt_user_id_1h,
+t2.oppo_ucnt_client_ip_1h,
+t2.oppo_ucnt_network_1h,
+t2.oppo_ucnt_device_sign_1h,
+t2.oppo_ucnt_info_1_1h,
+t2.oppo_ucnt_info_2_1h,
+t2.oppo_ucnt_ip_prov_1h,
+t2.oppo_ucnt_ip_city_1h,
+t2.oppo_ucnt_mobile_oper_platform_1h,
+t2.oppo_ucnt_operation_channel_1h,
+t2.oppo_ucnt_pay_scene_1h,
+t2.oppo_sum_amt_1h,
+t3.gmt_occur_unix_oppo_diff_not_now
+ from 
+(select event_id from t_sj_test_data_code_unix) t0 
+left outer join t_sj_test_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_test_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id
+left outer join t_sj_test_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;
+
+
+-- 去除特征中的缺失值
+
+drop table if exists t_sj_test_feature_oppo_notnull;
+
+
+create table t_sj_test_feature_oppo_notnull as
+select event_id,
+       nvl(oppo_cnt_24h, 0) as oppo_cnt_24h,
+       nvl(oppo_ucnt_user_id_24h, 0) as oppo_ucnt_user_id_24h,
+       nvl(oppo_ucnt_client_ip_24h, 0) as oppo_ucnt_client_ip_24h,
+       nvl(oppo_ucnt_network_24h, 0) as oppo_ucnt_network_24h,
+       nvl(oppo_ucnt_device_sign_24h, 0) as oppo_ucnt_device_sign_24h,
+       nvl(oppo_ucnt_info_1_24h, 0) as oppo_ucnt_info_1_24h,
+       nvl(oppo_ucnt_info_2_24h, 0) as oppo_ucnt_info_2_24h,
+       nvl(oppo_ucnt_ip_prov_24h, 0) as oppo_ucnt_ip_prov_24h,
+       nvl(oppo_ucnt_ip_city_24h, 0) as oppo_ucnt_ip_city_24h,
+       nvl(oppo_ucnt_mobile_oper_platform_24h, 0) as oppo_ucnt_mobile_oper_platform_24h,
+       nvl(oppo_ucnt_operation_channel_24h, 0) as oppo_ucnt_operation_channel_24h,
+       nvl(oppo_ucnt_pay_scene_24h, 0) as oppo_ucnt_pay_scene_24h,
+       nvl(oppo_sum_amt_24h, 0) as oppo_sum_amt_24h,
+       nvl(oppo_cnt_1h, 0) as oppo_cnt_1h,
+       nvl(oppo_ucnt_user_id_1h, 0) as oppo_ucnt_user_id_1h,
+       nvl(oppo_ucnt_client_ip_1h, 0) as oppo_ucnt_client_ip_1h,
+       nvl(oppo_ucnt_network_1h, 0) as oppo_ucnt_network_1h,
+       nvl(oppo_ucnt_device_sign_1h, 0) as oppo_ucnt_device_sign_1h,
+       nvl(oppo_ucnt_info_1_1h, 0) as oppo_ucnt_info_1_1h,
+       nvl(oppo_ucnt_info_2_1h, 0) as oppo_ucnt_info_2_1h,
+       nvl(oppo_ucnt_ip_prov_1h, 0) as oppo_ucnt_ip_prov_1h,
+       nvl(oppo_ucnt_ip_city_1h, 0) as oppo_ucnt_ip_city_1h,
+       nvl(oppo_ucnt_mobile_oper_platform_1h, 0) as oppo_ucnt_mobile_oper_platform_1h,
+       nvl(oppo_ucnt_operation_channel_1h, 0) as oppo_ucnt_operation_channel_1h,
+       nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,
+       nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,
+       nvl(gmt_occur_unix_oppo_diff_not_now, 24) as gmt_occur_unix_oppo_diff_not_now
+from t_sj_test_feature_oppo;

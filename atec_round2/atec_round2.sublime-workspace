@@ -4,6 +4,26 @@
 		"selected_items":
 		[
 			[
+				"t_sj_train",
+				"t_sj_train_data_code"
+			],
+			[
+				"gmt_",
+				"gmt_occur_unix"
+			],
+			[
+				"info",
+				"info_1"
+			],
+			[
+				"opp",
+				"opposing_id"
+			],
+			[
+				"gmt",
+				"gmt_occur_unix"
+			],
+			[
 				"collect",
 				"collect_set"
 			],
@@ -494,26 +514,6 @@
 			[
 				"sinjor_",
 				"sinjor_train_data_rand"
-			],
-			[
-				"sinjor_tain",
-				"sinjor_train_data_time"
-			],
-			[
-				"sinjor_train",
-				"sinjor_train_data_time"
-			],
-			[
-				"sinjor_tri",
-				"sinjor_train_data_time"
-			],
-			[
-				"databa",
-				"database_label"
-			],
-			[
-				"xiaoh",
-				"xiaohua_feature_extract_all"
 			]
 		]
 	},
@@ -550,10 +550,7 @@
 			}
 		},
 		{
-			"contents": "-- 字段名称\t解释\n-- event_id\t事件id\n-- user_id\t虚拟用户ID\n-- gmt_occur\t事件发生时间\n-- client_ip\t用户IP\n-- network\t网络类型\n-- device_sign\t设备ID\n-- info_1\t信息1\n-- info_2\t信息2\n-- ip_prov\tIP省\n-- ip_city\tIP市\n-- cert_prov\t证件省\n-- cert_city\t证件市\n-- card_bin_prov\t支付卡bin省\n-- card_bin_city\t支付卡bin市\n-- card_mobile_prov\t支付账号省\n-- card_mobile_city\t支付账号市\n-- card_cert_prov\t支付卡省\n-- card_cert_city\t支付卡市\n-- is_one_people\t主次双方证件是否一致\n-- mobile_oper_platform\t手机操作平台\n-- operation_channel\t支付方式\n-- pay_scene\t支付场景\n-- amt\t金额\n-- card_cert_no\t虚拟用户证件号\n-- opposing_id\t对方虚拟用户ID\n-- income_card_no\t虚拟用户的收款银行卡号\n-- income_card_cert_no\t虚拟收款用户的证件号\n-- income_card_mobile\t虚拟收款用户的手机号\n-- income_card_bank_code\t收入账号银行代码\n-- province\t收入账号归属省份\n-- city\t虚拟收款用户归属城市\n-- is_peer_pay\t是否代付\n-- version\t版本号\n-- is_fraud\t预测标签\n -- 合并训练集表格\n\n\n-- org_train_data\ndrop table if exists t_sj_train_analysis;\n\n\ncreate table t_sj_train_analysis as\nselect \"user_id\" as name,\n       count(user_id) as cnt,\n       count(distinct user_id) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"client_ip\" as name,\n       count(client_ip) as cnt,\n       count(distinct client_ip) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"network\" as name,\n       count(network) as cnt,\n       count(distinct network) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"device_sign\" as name,\n       count(device_sign) as cnt,\n       count(distinct device_sign) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"info_1\" as name,\n       count(info_1) as cnt,\n       count(distinct info_1) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"info_2\" as name,\n       count(info_2) as cnt,\n       count(distinct info_2) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"ip_prov\" as name,\n       count(ip_prov) as cnt,\n       count(distinct ip_prov) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"ip_city\" as name,\n       count(ip_city) as cnt,\n       count(distinct ip_city) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"cert_prov\" as name,\n       count(cert_prov) as cnt,\n       count(distinct cert_prov) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"cert_city\" as name,\n       count(cert_city) as cnt,\n       count(distinct cert_city) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"card_bin_prov\" as name,\n       count(card_bin_prov) as cnt,\n       count(distinct card_bin_prov) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"card_bin_city\" as name,\n       count(card_bin_city) as cnt,\n       count(distinct card_bin_city) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"is_one_people\" as name,\n       count(is_one_people) as cnt,\n       count(distinct is_one_people) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"mobile_oper_platform\" as name,\n       count(mobile_oper_platform) as cnt,\n       count(distinct mobile_oper_platform) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"operation_channel\" as name,\n       count(operation_channel) as cnt,\n       count(distinct operation_channel) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"pay_scene\" as name,\n       count(pay_scene) as cnt,\n       count(distinct pay_scene) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"amt\" as name,\n       count(amt) as cnt,\n       count(distinct amt) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"card_cert_no\" as name,\n       count(card_cert_no) as cnt,\n       count(distinct card_cert_no) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"opposing_id\" as name,\n       count(opposing_id) as cnt,\n       count(distinct opposing_id) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"income_card_no\" as name,\n       count(income_card_no) as cnt,\n       count(distinct income_card_no) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"income_card_cert_no\" as name,\n       count(income_card_cert_no) as cnt,\n       count(distinct income_card_cert_no) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"income_card_mobile\" as name,\n       count(income_card_mobile) as cnt,\n       count(distinct income_card_mobile) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"income_card_bank_code\" as name,\n       count(income_card_bank_code) as cnt,\n       count(distinct income_card_bank_code) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"province\" as name,\n       count(province) as cnt,\n       count(distinct province) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"city\" as name,\n       count(city) as cnt,\n       count(distinct city) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"is_peer_pay\" as name,\n       count(is_peer_pay) as cnt,\n       count(distinct is_peer_pay) as unique_cnt\nfrom atec_1000w_ins_data\nunion\nselect \"version\" as name,\n       count(version) as cnt,\n       count(distinct version) as unique_cnt\nfrom atec_1000w_ins_data;\n\n\n\n-- train_code\ndrop table if exists t_sj_train_code_analysis;\n\ncreate table t_sj_train_code_analysis as\nselect \"user_id\" as name,\n       count(user_id) as cnt,\n       count(distinct user_id) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"client_ip\" as name,\n       count(client_ip) as cnt,\n       count(distinct client_ip) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"network\" as name,\n       count(network) as cnt,\n       count(distinct network) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"device_sign\" as name,\n       count(device_sign) as cnt,\n       count(distinct device_sign) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"info_1\" as name,\n       count(info_1) as cnt,\n       count(distinct info_1) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"info_2\" as name,\n       count(info_2) as cnt,\n       count(distinct info_2) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"ip_prov\" as name,\n       count(ip_prov) as cnt,\n       count(distinct ip_prov) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"ip_city\" as name,\n       count(ip_city) as cnt,\n       count(distinct ip_city) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"cert_prov\" as name,\n       count(cert_prov) as cnt,\n       count(distinct cert_prov) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"cert_city\" as name,\n       count(cert_city) as cnt,\n       count(distinct cert_city) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_bin_prov\" as name,\n       count(card_bin_prov) as cnt,\n       count(distinct card_bin_prov) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_bin_city\" as name,\n       count(card_bin_city) as cnt,\n       count(distinct card_bin_city) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_mobile_prov\" as name,\n       count(card_mobile_prov) as cnt,\n       count(distinct card_mobile_prov) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_mobile_city\" as name,\n       count(card_mobile_city) as cnt,\n       count(distinct card_mobile_city) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_cert_prov\" as name,\n       count(card_cert_prov) as cnt,\n       count(distinct card_cert_prov) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_cert_city\" as name,\n       count(card_cert_city) as cnt,\n       count(distinct card_cert_city) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"is_one_people\" as name,\n       count(is_one_people) as cnt,\n       count(distinct is_one_people) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"mobile_oper_platform\" as name,\n       count(mobile_oper_platform) as cnt,\n       count(distinct mobile_oper_platform) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"operation_channel\" as name,\n       count(operation_channel) as cnt,\n       count(distinct operation_channel) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"pay_scene\" as name,\n       count(pay_scene) as cnt,\n       count(distinct pay_scene) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"amt\" as name,\n       count(amt) as cnt,\n       count(distinct amt) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"card_cert_no\" as name,\n       count(card_cert_no) as cnt,\n       count(distinct card_cert_no) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"opposing_id\" as name,\n       count(opposing_id) as cnt,\n       count(distinct opposing_id) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"income_card_no\" as name,\n       count(income_card_no) as cnt,\n       count(distinct income_card_no) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"income_card_cert_no\" as name,\n       count(income_card_cert_no) as cnt,\n       count(distinct income_card_cert_no) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"income_card_mobile\" as name,\n       count(income_card_mobile) as cnt,\n       count(distinct income_card_mobile) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"income_card_bank_code\" as name,\n       count(income_card_bank_code) as cnt,\n       count(distinct income_card_bank_code) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"province\" as name,\n       count(province) as cnt,\n       count(distinct province) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"city\" as name,\n       count(city) as cnt,\n       count(distinct city) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"is_peer_pay\" as name,\n       count(is_peer_pay) as cnt,\n       count(distinct is_peer_pay) as unique_cnt\nfrom t_sj_train_data_code\nunion\nselect \"version\" as name,\n       count(version) as cnt,\n       count(distinct version) as unique_cnt\nfrom t_sj_train_data_code;\n\ndrop table if exists t_sj_train_code_analysis_pay_scene;\n\ncreate table t_sj_train_code_analysis_pay_scene as\nselect \"user_id\" as name,\n       count(user_id) as cnt,\n       count(distinct user_id) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"client_ip\" as name,\n       count(client_ip) as cnt,\n       count(distinct client_ip) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"network\" as name,\n       count(network) as cnt,\n       count(distinct network) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"device_sign\" as name,\n       count(device_sign) as cnt,\n       count(distinct device_sign) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"info_1\" as name,\n       count(info_1) as cnt,\n       count(distinct info_1) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"info_2\" as name,\n       count(info_2) as cnt,\n       count(distinct info_2) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"ip_prov\" as name,\n       count(ip_prov) as cnt,\n       count(distinct ip_prov) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"ip_city\" as name,\n       count(ip_city) as cnt,\n       count(distinct ip_city) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"cert_prov\" as name,\n       count(cert_prov) as cnt,\n       count(distinct cert_prov) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"cert_city\" as name,\n       count(cert_city) as cnt,\n       count(distinct cert_city) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_bin_prov\" as name,\n       count(card_bin_prov) as cnt,\n       count(distinct card_bin_prov) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_bin_city\" as name,\n       count(card_bin_city) as cnt,\n       count(distinct card_bin_city) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_mobile_prov\" as name,\n       count(card_mobile_prov) as cnt,\n       count(distinct card_mobile_prov) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_mobile_city\" as name,\n       count(card_mobile_city) as cnt,\n       count(distinct card_mobile_city) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_cert_prov\" as name,\n       count(card_cert_prov) as cnt,\n       count(distinct card_cert_prov) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_cert_city\" as name,\n       count(card_cert_city) as cnt,\n       count(distinct card_cert_city) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"is_one_people\" as name,\n       count(is_one_people) as cnt,\n       count(distinct is_one_people) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"mobile_oper_platform\" as name,\n       count(mobile_oper_platform) as cnt,\n       count(distinct mobile_oper_platform) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"operation_channel\" as name,\n       count(operation_channel) as cnt,\n       count(distinct operation_channel) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"pay_scene\" as name,\n       count(pay_scene) as cnt,\n       count(distinct pay_scene) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"amt\" as name,\n       count(amt) as cnt,\n       count(distinct amt) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"card_cert_no\" as name,\n       count(card_cert_no) as cnt,\n       count(distinct card_cert_no) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"opposing_id\" as name,\n       count(opposing_id) as cnt,\n       count(distinct opposing_id) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"income_card_no\" as name,\n       count(income_card_no) as cnt,\n       count(distinct income_card_no) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"income_card_cert_no\" as name,\n       count(income_card_cert_no) as cnt,\n       count(distinct income_card_cert_no) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"income_card_mobile\" as name,\n       count(income_card_mobile) as cnt,\n       count(distinct income_card_mobile) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"income_card_bank_code\" as name,\n       count(income_card_bank_code) as cnt,\n       count(distinct income_card_bank_code) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"province\" as name,\n       count(province) as cnt,\n       count(distinct province) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"city\" as name,\n       count(city) as cnt,\n       count(distinct city) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"is_peer_pay\" as name,\n       count(is_peer_pay) as cnt,\n       count(distinct is_peer_pay) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18\nunion\nselect \"version\" as name,\n       count(version) as cnt,\n       count(distinct version) as unique_cnt\nfrom t_sj_train_data_code where pay_scene!=12 and pay_scene!=18;\n\ndrop table if exists t_sj_train_code_analysis_with_miss;\n\n\ncreate table t_sj_train_code_analysis_with_miss as\nselect * ,\n       (9601365 - cnt) as miss_cnt,\n       ((9601365 - cnt) / 9601365) as miss_rate\nfrom t_sj_train_code_analysis;\n\n\n\n-- 支不同付场景的正负样本比例\n-- 12 18场景下的好人比例最高 \n-- 12 0:1 459360:38=12088\n-- 18 0:1 243135:4=60783\nselect t1.pay_scene,\n       t2.y0_cnt,\n       t3.y1_cnt,\n       t2.y0_cnt /t3.y1_cnt as y0_div_y1_rate\nfrom\n    (select pay_scene\n     from t_sj_train_data_code\n     group by pay_scene) t1\nleft outer join\n    (select pay_scene,\n            count(*) as y0_cnt\n     from\n         (select user_id,\n                 pay_scene,\n                 is_fraud\n          from t_sj_train_data_code\n          where is_fraud == 0) t\n     group by pay_scene) t2 on t1.pay_scene = t2.pay_scene\nleft outer join\n    (select pay_scene,\n            count(*) as y1_cnt\n     from\n         (select user_id,\n                 pay_scene,\n                 is_fraud\n          from t_sj_train_data_code\n          where is_fraud != 0) t\n     group by pay_scene) t3 on t1.pay_scene = t3.pay_scene\n\n-- 不同时间的好坏交易比例，[0,6] 全量训练集中风险最高\nselect t2.hour,\n       t2.y0_cnt,\n       t3.y1_cnt,\n       t2.y0_cnt /t3.y1_cnt as y0_div_y1_rate\nfrom\n    (select hour,\n            count(*) as y0_cnt\n     from\n         (select user_id,\n                 gmt_occur,\n                 cast(substr(gmt_occur,12,2) as bigint) as hour,\n                 is_fraud\n          from t_sj_train_data_code\n          where is_fraud == 0) t\n     group by hour) t2\nleft outer join\n    (select hour,\n            count(*) as y1_cnt\n     from\n         (select user_id,\n                 gmt_occur,\n                 cast(substr(gmt_occur,12,2) as bigint) as hour,\n                 is_fraud\n          from t_sj_train_data_code\n          where is_fraud != 0) t\n     group by hour) t3 on t2.hour = t3.hour;\n\n\n-- 不同星期天数的好坏交易比例，无法区分，都接近167:1\nselect t2.hour,\n       t2.y0_cnt,\n       t3.y1_cnt,\n       t2.y0_cnt /t3.y1_cnt as y0_div_y1_rate\nfrom\n    (select hour,\n            count(*) as y0_cnt\n     from\n         (select user_id,\n                 gmt_occur,\n                 weekday(to_date(gmt_occur,\"yyyy-mm-dd hh\")) as hour,\n                 is_fraud\n          from t_sj_train_data_code\n          where is_fraud == 0) t\n     group by hour) t2\nleft outer join\n    (select hour,\n            count(*) as y1_cnt\n     from\n         (select user_id,\n                 gmt_occur,\n                 weekday(to_date(gmt_occur,\"yyyy-mm-dd hh\")) as hour,\n                 is_fraud\n          from t_sj_train_data_code\n          where is_fraud != 0) t\n     group by hour) t3 on t2.hour = t3.hour;\n",
 			"file": "feature_analysis.sql",
-			"file_size": 12821,
-			"file_write_time": 131779484912941785,
 			"settings":
 			{
 				"buffer_size": 17790,
@@ -562,10 +559,44 @@
 			}
 		},
 		{
-			"file": "feature_user.sql",
+			"file": "teature_oppsing.sql",
 			"settings":
 			{
-				"buffer_size": 20127,
+				"buffer_size": 11695,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test_feature_oppo.sql",
+			"settings":
+			{
+				"buffer_size": 7430,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "drop table if exists t_sj_train_oppo_client_ip_24h;\n\n\ncreate table t_sj_train_oppo_client_ip_24h as\nselect t3.event_id,\n       t4.oppo_client_ip_cnt_24h\nfrom t_sj_train_data_code_unix t3\nleft outer join\n    (select t1.opposing_id,\n            t1.gmt_occur_unix,\n            count(*) as oppo_client_ip_cnt_24h\n     from\n         (select opposing_id,\n                 gmt_occur_unix\n          from t_sj_train_data_code_unix\n          group by opposing_id,\n                   gmt_occur_unix) t1\n     left outer join\n         (select opposing_id,\n                 gmt_occur_unix,\n                 client_ip\n          from t_sj_train_data_code_unix) t2 on t1.opposing_id = t2.opposing_id\n     where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400\n         and t2.gmt_occur_unix < t1.gmt_occur_unix\n     group by t1.opposing_id,\n              t1.gmt_occur_unix) t4 on t3.opposing_id = t4.opposing_id\nand t3.gmt_occur_unix = t4.gmt_occur_unix;\n\n\n\ncreate table t_sj_train_oppo_time_diff_not_now as\nselect t3.event_id,\n       (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600 as gmt_occur_unix_oppo_diff_not_now\nfrom t_sj_train_data_code_unix t3\nleft outer join\n    (select t1.opposing_id,\n            t1.gmt_occur_unix,\n            max(t2.gmt_occur_unix) as gmt_occur_unix_last\n     from\n         (select opposing_id,\n                 gmt_occur_unix\n          from t_sj_train_data_code_unix\n          group by opposing_id,\n                   gmt_occur_unix)t1\n     left outer join\n         (select opposing_id,\n                 gmt_occur_unix\n          from t_sj_train_data_code_unix\n          group by opposing_id,\n                   gmt_occur_unix)t2 on t1.opposing_id = t2.opposing_id\n     where t1.gmt_occur_unix>t2.gmt_occur_unix\n     group by t1.opposing_id,\n              t1.gmt_occur_unix) t4 on t3.opposing_id = t4.opposing_id\nand t3.gmt_occur_unix = t4.gmt_occur_unix;",
+			"settings":
+			{
+				"buffer_size": 1871,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test_feature_analysis.sql",
+			"settings":
+			{
+				"buffer_size": 7924,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test_feature_base.sql",
+			"settings":
+			{
+				"buffer_size": 1695,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -684,7 +715,6 @@
 	},
 	"expanded_folders":
 	[
-		"/G/program_monkey/github_code/kernel/atec_round2"
 	],
 	"file_history":
 	[
@@ -833,6 +863,19 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"t_sj_train",
+			"device",
+			"device_sign",
+			"device",
+			"24",
+			"device",
+			"device_sign",
+			"test",
+			"device",
+			"device_sign",
+			"t_sj_test_data_code_unix",
+			"device",
+			"device_sign",
 			"device_device_sign_cnt_24h",
 			"device_device_sign_rate_24h",
 			"device_device_sign_cnt_24h",
@@ -947,20 +990,7 @@
 			"client",
 			"is_peer_pay",
 			"income_card_bank_code",
-			"income_card_mobile",
-			"income_card_no",
-			"info_1",
-			"user_id",
-			"operation_channel",
-			"mobile_oper_platform",
-			"is_one_people",
-			"network",
-			"net_work",
-			"client_ip",
-			"province",
-			"info_1",
-			"device_sign",
-			"network"
+			"income_card_mobile"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -968,6 +998,19 @@
 		"regex": false,
 		"replace_history":
 		[
+			"t_sj_test",
+			"oppo",
+			"opposing_id",
+			"oppo",
+			"1",
+			"oppo",
+			"opposing_id",
+			"train",
+			"oppo",
+			"opposing_id",
+			"t_sj_train_data_code_unix",
+			"oppo",
+			"opposing_id",
 			"device_user_id_cnt_24h",
 			"device_user_id_rate_24h",
 			"device_user_id_cnt_24h",
@@ -1082,20 +1125,7 @@
 			"is_peer_pay",
 			"income_card_bank_code",
 			"income_card_mobile",
-			"income_card_no",
-			"card_cert_no",
-			"pay_scene",
-			"operation_channel",
-			"mobile_oper_platform",
-			"is_one_people",
-			"network",
-			"net_work",
-			"city",
-			"info_2",
-			"info_1",
-			"device_sign",
-			"network",
-			"client_ip"
+			"income_card_no"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1106,7 +1136,7 @@
 	"groups":
 	[
 		{
-			"selected": 4,
+			"selected": 3,
 			"sheets":
 			[
 				{
@@ -1138,7 +1168,7 @@
 						"translation.y": 660.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 9,
 					"type": "text"
 				},
 				{
@@ -1154,8 +1184,8 @@
 						"selection":
 						[
 							[
-								7948,
-								7220
+								0,
+								17723
 							]
 						],
 						"settings":
@@ -1166,10 +1196,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 8671.0,
+						"translation.y": 720.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
@@ -1197,10 +1227,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1040.0,
+						"translation.y": 800.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 6,
 					"type": "text"
 				},
 				{
@@ -1216,8 +1246,8 @@
 						"selection":
 						[
 							[
-								9347,
-								15154
+								15741,
+								15741
 							]
 						],
 						"settings":
@@ -1228,19 +1258,140 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 9447.0,
+						"translation.y": 10167.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "teature_oppsing.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 11695,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								8427,
+								977
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "ASCII",
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 360.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "test_feature_oppo.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7430,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6545,
+								6545
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 4,
-					"file": "feature_user.sql",
+					"buffer": 6,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1871,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								218,
+								229
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "test_feature_analysis.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7924,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "ASCII",
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 7,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "test_feature_base.sql",
 					"semi_transient": true,
 					"settings":
 					{
-						"buffer_size": 20127,
+						"buffer_size": 1695,
 						"regions":
 						{
 						},
@@ -1259,14 +1410,14 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1289.0,
+						"translation.y": 300.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 9,
 					"file": "feature_device_id.sql",
 					"semi_transient": false,
 					"settings":
@@ -1290,10 +1441,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 9330.0,
+						"translation.y": 2065.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 8,
 					"type": "text"
 				}
 			]

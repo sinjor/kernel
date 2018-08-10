@@ -237,81 +237,82 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 
 
 
-drop table if exists t_sj_train_feature_device;
+drop table if exists t_sj_train_feature_oppo;
 
 
-create table t_sj_train_feature_device as
+create table t_sj_train_feature_oppo as
 select 
 t0.event_id,
-t1.device_cnt_24h,
-t1.device_ucnt_user_id_24h,
-t1.device_ucnt_network_24h,
-t1.device_ucnt_client_ip_24h,
-t1.device_ucnt_ip_prov_24h,
-t1.device_ucnt_ip_city_24h,
-t1.device_ucnt_operation_channel_24h,
-t1.device_ucnt_pay_scene_24h,
-t2.device_cnt_1h,
-t2.device_ucnt_user_id_1h,
-t2.device_ucnt_network_1h,
-t2.device_ucnt_client_ip_1h,
-t2.device_ucnt_ip_prov_1h,
-t2.device_ucnt_ip_city_1h,
-t2.device_ucnt_operation_channel_1h,
-t2.device_ucnt_pay_scene_1h,
-t3.gmt_occur_unix_device_diff,
-t4.gmt_occur_unix_device_diff_not_now,
-t5.device_client_ip_rate_24h,
-t5.device_network_rate_24h,
-t5.device_user_id_rate_24h,
-t5.device_ip_prov_rate_24h,
-t5.device_ip_city_rate_24h,
-t5.device_mobile_oper_platform_rate_24h,
-t5.device_operation_channel_rate_24h,
-t5.device_pay_scene_rate_24h
+t1.oppo_cnt_24h,
+t1.oppo_ucnt_user_id_24h,
+t1.oppo_ucnt_client_ip_24h,
+t1.oppo_ucnt_network_24h,
+t1.oppo_ucnt_device_sign_24h,
+t1.oppo_ucnt_info_1_24h,
+t1.oppo_ucnt_info_2_24h,
+t1.oppo_ucnt_ip_prov_24h,
+t1.oppo_ucnt_ip_city_24h,
+t1.oppo_ucnt_mobile_oper_platform_24h,
+t1.oppo_ucnt_operation_channel_24h,
+t1.oppo_ucnt_pay_scene_24h,
+t1.oppo_sum_amt_24h,
+
+t2.oppo_cnt_1h,
+t2.oppo_ucnt_user_id_1h,
+t2.oppo_ucnt_client_ip_1h,
+t2.oppo_ucnt_network_1h,
+t2.oppo_ucnt_device_sign_1h,
+t2.oppo_ucnt_info_1_1h,
+t2.oppo_ucnt_info_2_1h,
+t2.oppo_ucnt_ip_prov_1h,
+t2.oppo_ucnt_ip_city_1h,
+t2.oppo_ucnt_mobile_oper_platform_1h,
+t2.oppo_ucnt_operation_channel_1h,
+t2.oppo_ucnt_pay_scene_1h,
+t2.oppo_sum_amt_1h,
+t3.gmt_occur_unix_oppo_diff_not_now
  from 
 (select event_id from t_sj_train_data_code_unix) t0 
-left outer join t_sj_train_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_train_feature_device_1h t2 on t0.event_id = t2.event_id
-left outer join t_sj_train_device_time_diff t3 on t0.event_id = t3.event_id
-left outer join t_sj_train_device_time_diff_not_now t4 on t0.event_id = t4.event_id
-left outer join t_sj_train_device_scatter_freq_24h t5 on t0.event_id = t5.event_id;
+left outer join t_sj_train_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_train_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id
+left outer join t_sj_train_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;
 
 
 -- 去除特征中的缺失值
-drop table if exists t_sj_train_feature_device_notnull;
+
+drop table if exists t_sj_train_feature_oppo_notnull;
 
 
-create table t_sj_train_feature_device_notnull as
-select 
-event_id,
-nvl(device_cnt_24h, 0) as device_cnt_24h,
-nvl(device_ucnt_user_id_24h, 0) as device_ucnt_user_id_24h,
-nvl(device_ucnt_network_24h, 0) as device_ucnt_network_24h,
-nvl(device_ucnt_client_ip_24h, 0) as device_ucnt_client_ip_24h,
-nvl(device_ucnt_ip_prov_24h, 0) as device_ucnt_ip_prov_24h,
-nvl(device_ucnt_ip_city_24h, 0) as device_ucnt_ip_city_24h,
-nvl(device_ucnt_operation_channel_24h, 0) as device_ucnt_operation_channel_24h,
-nvl(device_ucnt_pay_scene_24h, 0) as device_ucnt_pay_scene_24h,
-nvl(device_cnt_1h, 0) as device_cnt_1h,
-nvl(device_ucnt_user_id_1h, 0) as device_ucnt_user_id_1h,
-nvl(device_ucnt_network_1h, 0) as device_ucnt_network_1h,
-nvl(device_ucnt_client_ip_1h, 0) as device_ucnt_client_ip_1h,
-nvl(device_ucnt_ip_prov_1h, 0) as device_ucnt_ip_prov_1h,
-nvl(device_ucnt_ip_city_1h, 0) as device_ucnt_ip_city_1h,
-nvl(device_ucnt_operation_channel_1h, 0) as device_ucnt_operation_channel_1h,
-nvl(device_ucnt_pay_scene_1h, 0) as device_ucnt_pay_scene_1h,
-nvl(gmt_occur_unix_device_diff, 24) as gmt_occur_unix_device_diff,
-nvl(gmt_occur_unix_device_diff_not_now, 24) as gmt_occur_unix_device_diff_not_now,
-nvl(device_client_ip_rate_24h, 0) as device_client_ip_rate_24h,
-nvl(device_network_rate_24h, 0) as device_network_rate_24h,
-nvl(device_user_id_rate_24h, 0) as device_user_id_rate_24h,
-nvl(device_ip_prov_rate_24h, 0) as device_ip_prov_rate_24h,
-nvl(device_ip_city_rate_24h, 0) as device_ip_city_rate_24h,
-nvl(device_mobile_oper_platform_rate_24h, 0) as device_mobile_oper_platform_rate_24h,
-nvl(device_operation_channel_rate_24h, 0) as device_operation_channel_rate_24h,
-nvl(device_pay_scene_rate_24h, 0) as device_pay_scene_rate_24h
-from t_sj_train_feature_device;
+create table t_sj_train_feature_oppo_notnull as
+select event_id,
+       nvl(oppo_cnt_24h, 0) as oppo_cnt_24h,
+       nvl(oppo_ucnt_user_id_24h, 0) as oppo_ucnt_user_id_24h,
+       nvl(oppo_ucnt_client_ip_24h, 0) as oppo_ucnt_client_ip_24h,
+       nvl(oppo_ucnt_network_24h, 0) as oppo_ucnt_network_24h,
+       nvl(oppo_ucnt_device_sign_24h, 0) as oppo_ucnt_device_sign_24h,
+       nvl(oppo_ucnt_info_1_24h, 0) as oppo_ucnt_info_1_24h,
+       nvl(oppo_ucnt_info_2_24h, 0) as oppo_ucnt_info_2_24h,
+       nvl(oppo_ucnt_ip_prov_24h, 0) as oppo_ucnt_ip_prov_24h,
+       nvl(oppo_ucnt_ip_city_24h, 0) as oppo_ucnt_ip_city_24h,
+       nvl(oppo_ucnt_mobile_oper_platform_24h, 0) as oppo_ucnt_mobile_oper_platform_24h,
+       nvl(oppo_ucnt_operation_channel_24h, 0) as oppo_ucnt_operation_channel_24h,
+       nvl(oppo_ucnt_pay_scene_24h, 0) as oppo_ucnt_pay_scene_24h,
+       nvl(oppo_sum_amt_24h, 0) as oppo_sum_amt_24h,
+       nvl(oppo_cnt_1h, 0) as oppo_cnt_1h,
+       nvl(oppo_ucnt_user_id_1h, 0) as oppo_ucnt_user_id_1h,
+       nvl(oppo_ucnt_client_ip_1h, 0) as oppo_ucnt_client_ip_1h,
+       nvl(oppo_ucnt_network_1h, 0) as oppo_ucnt_network_1h,
+       nvl(oppo_ucnt_device_sign_1h, 0) as oppo_ucnt_device_sign_1h,
+       nvl(oppo_ucnt_info_1_1h, 0) as oppo_ucnt_info_1_1h,
+       nvl(oppo_ucnt_info_2_1h, 0) as oppo_ucnt_info_2_1h,
+       nvl(oppo_ucnt_ip_prov_1h, 0) as oppo_ucnt_ip_prov_1h,
+       nvl(oppo_ucnt_ip_city_1h, 0) as oppo_ucnt_ip_city_1h,
+       nvl(oppo_ucnt_mobile_oper_platform_1h, 0) as oppo_ucnt_mobile_oper_platform_1h,
+       nvl(oppo_ucnt_operation_channel_1h, 0) as oppo_ucnt_operation_channel_1h,
+       nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,
+       nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,
+       nvl(gmt_occur_unix_oppo_diff_not_now, 24) as gmt_occur_unix_oppo_diff_not_now
+from t_sj_train_feature_oppo;
 
 --------------------------------------用户id特征统计 end------------------------------------------
 
