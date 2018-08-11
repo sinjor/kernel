@@ -1,8 +1,9 @@
 
-drop table if exists t_sj_test_feature_user;
+
+drop table if exists t_sj_train_feature_user;
 
 
-create table t_sj_test_feature_user as
+create table t_sj_train_feature_user as
 select t0.event_id,
        t1.user_cnt_24h,
        t1.user_ucnt_client_ip_24h,
@@ -45,23 +46,23 @@ select t0.event_id,
        t4.user_opposing_id_rate_24h
 from
     (select event_id
-     from t_sj_test_data_code_unix) t0
-left outer join t_sj_test_feature_user_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_test_feature_user_1h_not_now t2 on t0.event_id = t2.event_id
-left outer join t_sj_test_user_time_diff_not_now t3 on t0.event_id = t3.event_id
-left outer join t_sj_test_user_scatter_freq_24h t4 on t0.event_id = t4.event_id;
-
- -- È¥³ıÌØÕ÷ÖĞµÄÈ±Ê§Öµ
--- rate ÌØÕ÷²»»áÎª¿Õ£¬24Ğ¡Ê±ÄÚÃ»ÓĞÊ¹ÓÃ¹ı¸ÃIP£¬ÔòÉèÎª0
--- time_diffÌØÕ÷²»»áÎª¿Õ£¬Èç¹ûÊı¾İ¼¯ÖĞµÚÒ»´Î½»Ò×£¬ÔòÊ±¼ä¼ä¸ôÎªÊı¾İ¼¯ÆğÊ¼Ê±¼ä£¨ÆğÊ¼Ê±¼ä - 24Ğ¡Ê±£©ÖÁµ±Ç°Ñù±¾µÄÊ±¼ä
--- 24Ğ¡Ê±ÄÚÃ»ÓĞ½»Ò×Ñù±¾£¬Ôò24h±äÁ¿Îª0
--- 1Ğ¡Ê±ÄÚÃ»ÓĞ½»Ò×Ñù±¾£¬Ôò1h±äÁ¿Îª0
---
-
-drop table if exists t_sj_test_feature_user_notnull;
+     from t_sj_train_data_code_unix) t0
+left outer join t_sj_train_feature_user_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_train_feature_user_1h_not_now t2 on t0.event_id = t2.event_id
+left outer join t_sj_train_user_time_diff_not_now t3 on t0.event_id = t3.event_id
+left outer join t_sj_train_user_scatter_freq_24h t4 on t0.event_id = t4.event_id;
 
 
-create table t_sj_test_feature_user_notnull as
+-- å»é™¤ç‰¹å¾ä¸­çš„ç¼ºå¤±å€¼
+-- rate ç‰¹å¾ä¸ä¼šä¸ºç©ºï¼Œ24å°æ—¶å†…æ²¡æœ‰ä½¿ç”¨è¿‡è¯¥IPï¼Œåˆ™è®¾ä¸º0
+-- time_diffç‰¹å¾ä¸ä¼šä¸ºç©ºï¼Œå¦‚æœæ•°æ®é›†ä¸­ç¬¬ä¸€æ¬¡äº¤æ˜“ï¼Œåˆ™æ—¶é—´é—´éš”ä¸ºæ•°æ®é›†èµ·å§‹æ—¶é—´ï¼ˆèµ·å§‹æ—¶é—´ - 24å°æ—¶ï¼‰è‡³å½“å‰æ ·æœ¬çš„æ—¶é—´
+-- 24å°æ—¶å†…æ²¡æœ‰äº¤æ˜“æ ·æœ¬ï¼Œåˆ™24hå˜é‡ä¸º0
+-- 1å°æ—¶å†…æ²¡æœ‰äº¤æ˜“æ ·æœ¬ï¼Œåˆ™1hå˜é‡ä¸º0
+-- 
+drop table if exists t_sj_train_feature_user_notnull;
+
+
+create table t_sj_train_feature_user_notnull as
 select event_id,
        nvl(user_cnt_24h, 0) as user_cnt_24h,
        nvl(user_ucnt_client_ip_24h, 0) as user_ucnt_client_ip_24h,
@@ -102,15 +103,15 @@ select event_id,
        user_pay_scene_rate_24h,
        user_amt_rate_24h,
        user_opposing_id_rate_24h
+from t_sj_train_feature_user;
 
-from t_sj_test_feature_user;
-
------------------------------device----------------------
-
-drop table if exists t_sj_test_feature_device;
+-----------------------------------device---------------
 
 
-create table t_sj_test_feature_device as
+drop table if exists t_sj_train_feature_device;
+
+
+create table t_sj_train_feature_device as
 select t0.event_id,
        t1.device_cnt_24h,
        t1.device_ucnt_client_ip_24h,
@@ -153,23 +154,23 @@ select t0.event_id,
        t4.device_opposing_id_rate_24h
 from
     (select event_id
-     from t_sj_test_data_code_unix) t0
-left outer join t_sj_test_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_test_feature_device_1h_not_now t2 on t0.event_id = t2.event_id
-left outer join t_sj_test_device_time_diff_not_now t3 on t0.event_id = t3.event_id
-left outer join t_sj_test_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;
+     from t_sj_train_data_code_unix) t0
+left outer join t_sj_train_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_train_feature_device_1h_not_now t2 on t0.event_id = t2.event_id
+left outer join t_sj_train_device_time_diff_not_now t3 on t0.event_id = t3.event_id
+left outer join t_sj_train_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;
 
 
--- È¥³ıÌØÕ÷ÖĞµÄÈ±Ê§Öµ
--- rate ÌØÕ÷²»»áÎª¿Õ£¬24Ğ¡Ê±ÄÚÃ»ÓĞÊ¹ÓÃ¹ı¸ÃIP£¬ÔòÉèÎª0
--- time_diffÌØÕ÷²»»áÎª¿Õ£¬Èç¹ûÊı¾İ¼¯ÖĞµÚÒ»´Î½»Ò×£¬ÔòÊ±¼ä¼ä¸ôÎªÊı¾İ¼¯ÆğÊ¼Ê±¼ä£¨ÆğÊ¼Ê±¼ä - 24Ğ¡Ê±£©ÖÁµ±Ç°Ñù±¾µÄÊ±¼ä
--- 24Ğ¡Ê±ÄÚÃ»ÓĞ½»Ò×Ñù±¾£¬Ôò24h±äÁ¿Îª0
--- 1Ğ¡Ê±ÄÚÃ»ÓĞ½»Ò×Ñù±¾£¬Ôò1h±äÁ¿Îª0
+-- å»é™¤ç‰¹å¾ä¸­çš„ç¼ºå¤±å€¼
+-- rate ç‰¹å¾ä¸ä¼šä¸ºç©ºï¼Œ24å°æ—¶å†…æ²¡æœ‰ä½¿ç”¨è¿‡è¯¥IPï¼Œåˆ™è®¾ä¸º0
+-- time_diffç‰¹å¾ä¸ä¼šä¸ºç©ºï¼Œå¦‚æœæ•°æ®é›†ä¸­ç¬¬ä¸€æ¬¡äº¤æ˜“ï¼Œåˆ™æ—¶é—´é—´éš”ä¸ºæ•°æ®é›†èµ·å§‹æ—¶é—´ï¼ˆèµ·å§‹æ—¶é—´ - 24å°æ—¶ï¼‰è‡³å½“å‰æ ·æœ¬çš„æ—¶é—´
+-- 24å°æ—¶å†…æ²¡æœ‰äº¤æ˜“æ ·æœ¬ï¼Œåˆ™24hå˜é‡ä¸º0
+-- 1å°æ—¶å†…æ²¡æœ‰äº¤æ˜“æ ·æœ¬ï¼Œåˆ™1hå˜é‡ä¸º0
 -- 
-drop table if exists t_sj_test_feature_device_notnull;
+drop table if exists t_sj_train_feature_device_notnull;
 
 
-create table t_sj_test_feature_device_notnull as
+create table t_sj_train_feature_device_notnull as
 select event_id,
        nvl(device_cnt_24h, 0) as device_cnt_24h,
        nvl(device_ucnt_client_ip_24h, 0) as device_ucnt_client_ip_24h,
@@ -210,15 +211,18 @@ select event_id,
        device_pay_scene_rate_24h,
        device_amt_rate_24h,
        device_opposing_id_rate_24h
-from t_sj_test_feature_device;
+from t_sj_train_feature_device;
 
 
---------------------------oppo-----------------------
-
-drop table if exists t_sj_test_feature_oppo;
 
 
-create table t_sj_test_feature_oppo as
+----------------------------------------oppo-----------------------------
+
+
+drop table if exists t_sj_train_feature_oppo;
+
+
+create table t_sj_train_feature_oppo as
 select 
 t0.event_id,
 t1.oppo_cnt_24h,
@@ -250,18 +254,18 @@ t2.oppo_ucnt_pay_scene_1h,
 t2.oppo_sum_amt_1h,
 t3.gmt_occur_unix_oppo_diff_not_now
  from 
-(select event_id from t_sj_test_data_code_unix) t0 
-left outer join t_sj_test_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_test_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id
-left outer join t_sj_test_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;
+(select event_id from t_sj_train_data_code_unix) t0 
+left outer join t_sj_train_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_train_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id
+left outer join t_sj_train_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;
 
 
--- È¥³ıÌØÕ÷ÖĞµÄÈ±Ê§Öµ
+-- å»é™¤ç‰¹å¾ä¸­çš„ç¼ºå¤±å€¼
 
-drop table if exists t_sj_test_feature_oppo_notnull;
+drop table if exists t_sj_train_feature_oppo_notnull;
 
 
-create table t_sj_test_feature_oppo_notnull as
+create table t_sj_train_feature_oppo_notnull as
 select event_id,
        nvl(oppo_cnt_24h, 0) as oppo_cnt_24h,
        nvl(oppo_ucnt_user_id_24h, 0) as oppo_ucnt_user_id_24h,
@@ -290,26 +294,30 @@ select event_id,
        nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,
        nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,
        gmt_occur_unix_oppo_diff_not_now
-from t_sj_test_feature_oppo;
+from t_sj_train_feature_oppo;
+
+----------------------------------------------all-------------------------------------
+drop table if exists t_sj_train_feature_data;
 
 
-drop table if exists t_sj_test_feature_data;
-
-create table t_sj_test_feature_data as
-select t1.event_id,
+create table t_sj_train_feature_data as
+select case
+           when t0.is_fraud = 0 then 0
+           else 1
+       end as label,
+       t1.event_id,
        t1.gmt_occur,
        t1.hour,
        t1.hour_bin,
        t1.network,
-       -- t1.info_1,
- -- t1.info_2,
-
+       t1.info_1,
+       t1.info_2,
        t1.is_one_people,
        t1.mobile_oper_platform,
        t1.operation_channel,
        t1.pay_scene,
        t1.amt,
-       
+
        t2.user_cnt_24h,
        t2.user_ucnt_client_ip_24h,
        t2.user_ucnt_network_24h,
@@ -418,59 +426,46 @@ select t1.event_id,
        t4.oppo_ucnt_pay_scene_1h,
        t4.oppo_sum_amt_1h,
        t4.gmt_occur_unix_oppo_diff_not_now
-from t_sj_test_feature_base t1
-left outer join t_sj_test_feature_user_notnull t2 on t1.event_id = t2.event_id
-left outer join t_sj_test_feature_device_notnull t3 on t1.event_id = t3.event_id
-left outer join t_sj_test_feature_oppo_notnull t4 on t1.event_id = t4.event_id;
+from
+    (select event_id,
+            is_fraud
+     from t_sj_train_data_code_unix) t0
+left outer join t_sj_train_feature_base t1 on t1.event_id = t0.event_id
+left outer join t_sj_train_feature_uid_notnull t2 on t1.event_id = t2.event_id
+left outer join t_sj_train_feature_device_notnull t3 on t1.event_id = t3.event_id
+left outer join t_sj_train_feature_oppo_notnull t4 on t1.event_id = t4.event_id;
+    
 
+drop table if exists t_sj_train_dataset;
 
+create table t_sj_train_dataset as
+select *
+from t_sj_train_feature_data
+where gmt_occur <'2017-10-20 00'and gmt_occur>'2017-09-06 00';
 
-drop table if exists result;
+drop table if exists t_sj_tset_dataset;
 
+create table t_sj_tset_dataset as
+select *
+from t_sj_train_feature_data
+where gmt_occur >='2017-10-20 00';
 
-create table result as
-select event_id as id,
-       (1 - prediction_score) as score
-from result_0810; 
+select count(*),
+       count(*)/ 9600000
+from t_sj_train_feature_data
+where gmt_occur >'2017-10-20 00'
 
-
-
- 
--- left outer join
---     (select event_id,
---             is_fraud
---      from t_sj_train_data_code_unix) t3 on t1.event_id = t3.event_id;
-
--- drop table if exists t_sj_train_dataset;
-
--- create table t_sj_train_dataset as
--- select *
--- from t_sj_train_feature_data
--- where gmt_occur <'2017-10-20 00';
-
--- drop table if exists t_sj_tset_dataset;
-
--- create table t_sj_tset_dataset as
--- select *
--- from t_sj_train_feature_data
--- where gmt_occur >='2017-10-20 00';
-
--- select count(*),
---        count(*)/ 9600000
--- from t_sj_train_feature_data
--- where gmt_occur >'2017-10-20 00'
-
--- select count(event_id) as event_id_cnt,
---        count(hour) as hour_cnt,
---        count(hour_bin) as hour_bin_cnt,
---        count(network) as network_cnt,
---        count(info_1) as info_1_cnt,
---        count(info_2) as info_2_cnt,
---        count(is_one_people) as is_one_people_cnt,
---        count(mobile_oper_platform) as mobile_oper_platform_cnt,
---        count(operation_channel) as operation_channel_cnt,
---        count(pay_scene) as pay_scene_cnt,
---        count(amt) as amt_cnt
--- from t_sj_train_feature_data;
+select count(event_id) as event_id_cnt,
+       count(hour) as hour_cnt,
+       count(hour_bin) as hour_bin_cnt,
+       count(network) as network_cnt,
+       count(info_1) as info_1_cnt,
+       count(info_2) as info_2_cnt,
+       count(is_one_people) as is_one_people_cnt,
+       count(mobile_oper_platform) as mobile_oper_platform_cnt,
+       count(operation_channel) as operation_channel_cnt,
+       count(pay_scene) as pay_scene_cnt,
+       count(amt) as amt_cnt
+from t_sj_train_feature_data;
 
 

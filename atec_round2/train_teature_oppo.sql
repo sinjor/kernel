@@ -35,7 +35,8 @@ factor-- income_card_mobile 虚拟收款用户的手机号 0.99
 -- version  版本号
 -- is_fraud 预测标签
 
--- 获取用户相关的特征
+-- 获取收款用户相关的特征
+-- 用户ID与时间去重后优化方式
 -- 7min38s
 drop table if exists t_sj_train_feature_oppo_24h_not_now;
 
@@ -212,7 +213,10 @@ drop table if exists t_sj_train_oppo_time_diff_not_now;
 
 create table t_sj_train_oppo_time_diff_not_now as
 select t3.event_id,
-       (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600 as gmt_occur_unix_oppo_diff_not_now
+       case
+           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504540800)/3600
+           else (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600
+       end as gmt_occur_unix_oppo_diff_not_now
 from t_sj_train_data_code_unix t3
 left outer join
     (select t1.opposing_id,
@@ -311,7 +315,7 @@ select event_id,
        nvl(oppo_ucnt_operation_channel_1h, 0) as oppo_ucnt_operation_channel_1h,
        nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,
        nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,
-       nvl(gmt_occur_unix_oppo_diff_not_now, 24) as gmt_occur_unix_oppo_diff_not_now
+       gmt_occur_unix_oppo_diff_not_now
 from t_sj_train_feature_oppo;
 
 --------------------------------------用户id特征统计 end------------------------------------------

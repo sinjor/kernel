@@ -36,10 +36,10 @@ factor-- income_card_mobile 虚拟收款用户的手机号 0.99
 -- is_fraud 预测标签
 
 
-drop table if exists t_sj_feature_base;
+drop table if exists t_sj_train_feature_base;
 
 
-create table t_sj_feature_base as
+create table t_sj_train_feature_base as
 select event_id,
        gmt_occur,
        hour,
@@ -49,8 +49,8 @@ select event_id,
            else 1
        end as hour_bin,
        network,
-       info_1,
-       info_2,
+       -- info_1,
+       -- info_2,
        is_one_people,
        mobile_oper_platform,
        operation_channel,
@@ -61,8 +61,8 @@ from
             gmt_occur,
             cast(substr(gmt_occur,12,2) as bigint) as hour,
             network,
-            info_1,
-            info_2,
+            -- info_1,
+            -- info_2,
             is_one_people,
             mobile_oper_platform,
             operation_channel,

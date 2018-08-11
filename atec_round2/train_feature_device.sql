@@ -45,10 +45,10 @@ factor-- income_card_mobile 虚拟收款用户的手机号 0.99
 -- create table t_sj_device_operation_channel_24h as select * from t_device_operation_channel_24h;
 -- create table t_sj_device_pay_scene_24h as select * from t_device_pay_scene_24h;
 
-drop table if exists t_sj_test_feature_device_24h_not_now;
+drop table if exists t_sj_train_feature_device_24h_not_now;
 
 
-create table t_sj_test_feature_device_24h_not_now as
+create table t_sj_train_feature_device_24h_not_now as
 select t1.event_id,
        count(*) as device_cnt_24h,
        size(collect_set(t2.user_id)) as device_ucnt_user_id_24h,
@@ -67,7 +67,7 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
@@ -85,7 +85,7 @@ left outer join
             pay_scene,
             amt,
             opposing_id
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix < t1.gmt_occur_unix
@@ -94,10 +94,10 @@ group by t1.event_id;
 
 
 -- 一小时内的交易次数 和部分离散变量的去重个数
-drop table if exists t_sj_test_feature_device_1h_not_now;
+drop table if exists t_sj_train_feature_device_1h_not_now;
 
 
-create table t_sj_test_feature_device_1h_not_now as
+create table t_sj_train_feature_device_1h_not_now as
 select t3.event_id,
        t3.device_sign,
        t3.gmt_occur_unix,
@@ -114,7 +114,7 @@ select t3.event_id,
        t4.device_ucnt_pay_scene_1h,
        t4.device_sum_amt_1h,
        t4.device_ucnt_opposing_id_1h
-from t_sj_test_data_code_unix t3
+from t_sj_train_data_code_unix t3
 left outer join
     (select t1.device_sign,
             t1.gmt_occur_unix,
@@ -134,7 +134,7 @@ left outer join
      from
          (select device_sign,
                  gmt_occur_unix
-          from t_sj_test_data_code_unix where device_sign is not null
+          from t_sj_train_data_code_unix where device_sign is not null
           group by device_sign,
                    gmt_occur_unix) t1
      left outer join
@@ -153,22 +153,22 @@ left outer join
                  pay_scene,
                  amt,
                  opposing_id
-          from t_sj_test_data_code_unix where device_sign is not null) t2 on t1.device_sign = t2.device_sign
+          from t_sj_train_data_code_unix where device_sign is not null) t2 on t1.device_sign = t2.device_sign
      and t1.gmt_occur_unix = t2.gmt_occur_unix
      group by t1.device_sign,
               t1.gmt_occur_unix) t4 on t3.device_sign = t4.device_sign
 and t3.gmt_occur_unix = t4.gmt_occur_unix;
 
-drop table if exists t_sj_test_device_time_diff_not_now;
+drop table if exists t_sj_train_device_time_diff_not_now;
 
 
-create table t_sj_test_device_time_diff_not_now as
+create table t_sj_train_device_time_diff_not_now as
 select t3.event_id,
        case
            when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504540800)/3600
            else (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600
        end as gmt_occur_unix_device_diff_not_now
-from t_sj_test_data_code_unix t3
+from t_sj_train_data_code_unix t3
 left outer join
     (select t1.device_sign,
             t1.gmt_occur_unix,
@@ -176,14 +176,14 @@ left outer join
      from
          (select device_sign,
                  gmt_occur_unix
-          from t_sj_test_data_code_unix
+          from t_sj_train_data_code_unix
           where device_sign is not null
           group by device_sign,
                    gmt_occur_unix)t1
      left outer join
          (select device_sign,
                  gmt_occur_unix
-          from t_sj_test_data_code_unix
+          from t_sj_train_data_code_unix
           where device_sign is not null
           group by device_sign,
                    gmt_occur_unix)t2 on t1.device_sign = t2.device_sign
@@ -205,12 +205,12 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 --     (select event_id,
 --             device_sign,
 --             gmt_occur_unix
---      from t_sj_test_data_code_unix where device_sign is not null)t1
+--      from t_sj_train_data_code_unix where device_sign is not null)t1
 -- left outer join
 --     (select event_id,
 --             device_sign,
 --             gmt_occur_unix
---      from t_sj_test_data_code_unix where device_sign is not null)t2 on t1.device_sign = t2.device_sign
+--      from t_sj_train_data_code_unix where device_sign is not null)t2 on t1.device_sign = t2.device_sign
 -- where t1.gmt_occur_unix>=t2.gmt_occur_unix
 --     and t1.event_id !=t2.event_id
 -- group by t1.event_id,t2.device_sign;
@@ -223,7 +223,7 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 -- create table t_sj_device_time_diff as
 -- select t1.event_id,
 --        (t1.gmt_occur_unix - t2.gmt_occur_unix_last)/3600 as gmt_occur_unix_device_diff
--- from t_sj_test_data_code_unix t1
+-- from t_sj_train_data_code_unix t1
 -- left outer join t_sj_device_last_time t2 on t1.event_id = t2.event_id;
 
 -- -------------------- 获取用户上一次的时间点(去除同一个小时的记录)
@@ -239,12 +239,12 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 --     (select event_id,
 --             device_sign,
 --             gmt_occur_unix
---      from t_sj_test_data_code_unix where device_sign is not null)t1
+--      from t_sj_train_data_code_unix where device_sign is not null)t1
 -- left outer join
 --     (select event_id,
 --             device_sign,
 --             gmt_occur_unix
---      from t_sj_test_data_code_unix where device_sign is not null)t2 on t1.device_sign = t2.device_sign
+--      from t_sj_train_data_code_unix where device_sign is not null)t2 on t1.device_sign = t2.device_sign
 -- where t1.gmt_occur_unix>t2.gmt_occur_unix
 --     and t1.event_id !=t2.event_id
 -- group by t1.event_id,t2.device_sign;
@@ -256,7 +256,7 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 -- create table t_sj_device_time_diff_not_now as
 -- select t1.event_id,
 --        (t1.gmt_occur_unix - t2.gmt_occur_unix_last)/3600 as gmt_occur_unix_device_diff_not_now
--- from t_sj_test_data_code_unix t1
+-- from t_sj_train_data_code_unix t1
 -- left outer join t_sj_device_last_time_not_now t2 on t1.event_id = t2.event_id;
 
 
@@ -266,10 +266,10 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 ---------------------------------------------------离散变量的历史出现频率 每张表的执行时间约3min
 -- 过去24小时内ip对应的使用个数
 
-drop table if exists t_sj_test_device_client_ip_24h;
+drop table if exists t_sj_train_device_client_ip_24h;
 
 
-create table t_sj_test_device_client_ip_24h as
+create table t_sj_train_device_client_ip_24h as
 select t1.event_id,
        t2.client_ip,
        count(*) as device_client_ip_cnt_24h
@@ -277,14 +277,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             client_ip
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -293,10 +293,10 @@ group by t1.event_id,
          t2.client_ip;
 
 
-drop table if exists t_sj_test_device_network_24h;
+drop table if exists t_sj_train_device_network_24h;
 
 
-create table t_sj_test_device_network_24h as
+create table t_sj_train_device_network_24h as
 select t1.event_id,
        t2.network,
        count(*) as device_network_cnt_24h
@@ -304,14 +304,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             network
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -320,10 +320,10 @@ group by t1.event_id,
          t2.network;
 
 
-drop table if exists t_sj_test_device_user_id_24h;
+drop table if exists t_sj_train_device_user_id_24h;
 
 
-create table t_sj_test_device_user_id_24h as
+create table t_sj_train_device_user_id_24h as
 select t1.event_id,
        t2.user_id,
        count(*) as device_user_id_cnt_24h
@@ -331,14 +331,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             user_id
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -347,10 +347,10 @@ group by t1.event_id,
          t2.user_id;
 
 
-drop table if exists t_sj_test_device_info_1_24h;
+drop table if exists t_sj_train_device_info_1_24h;
 
 
-create table t_sj_test_device_info_1_24h as
+create table t_sj_train_device_info_1_24h as
 select t1.event_id,
        t2.info_1,
        count(*) as device_info_1_cnt_24h
@@ -358,14 +358,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             info_1
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -374,10 +374,10 @@ group by t1.event_id,
          t2.info_1;
 
 
-drop table if exists t_sj_test_device_info_2_24h;
+drop table if exists t_sj_train_device_info_2_24h;
 
 
-create table t_sj_test_device_info_2_24h as
+create table t_sj_train_device_info_2_24h as
 select t1.event_id,
        t2.info_2,
        count(*) as device_info_2_cnt_24h
@@ -385,14 +385,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             info_2
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -401,10 +401,10 @@ group by t1.event_id,
          t2.info_2;
 
 
-drop table if exists t_sj_test_device_ip_prov_24h;
+drop table if exists t_sj_train_device_ip_prov_24h;
 
 
-create table t_sj_test_device_ip_prov_24h as
+create table t_sj_train_device_ip_prov_24h as
 select t1.event_id,
        t2.ip_prov,
        count(*) as device_ip_prov_cnt_24h
@@ -412,14 +412,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             ip_prov
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -428,10 +428,10 @@ group by t1.event_id,
          t2.ip_prov;
 
 
-drop table if exists t_sj_test_device_ip_city_24h;
+drop table if exists t_sj_train_device_ip_city_24h;
 
 
-create table t_sj_test_device_ip_city_24h as
+create table t_sj_train_device_ip_city_24h as
 select t1.event_id,
        t2.ip_city,
        count(*) as device_ip_city_cnt_24h
@@ -439,14 +439,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             ip_city
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -455,10 +455,10 @@ group by t1.event_id,
          t2.ip_city;
 
 
-drop table if exists t_sj_test_device_mobile_oper_platform_24h;
+drop table if exists t_sj_train_device_mobile_oper_platform_24h;
 
 
-create table t_sj_test_device_mobile_oper_platform_24h as
+create table t_sj_train_device_mobile_oper_platform_24h as
 select t1.event_id,
        t2.mobile_oper_platform,
        count(*) as device_mobile_oper_platform_cnt_24h
@@ -466,14 +466,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             mobile_oper_platform
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -482,10 +482,10 @@ group by t1.event_id,
          t2.mobile_oper_platform;
 
 
-drop table if exists t_sj_test_device_operation_channel_24h;
+drop table if exists t_sj_train_device_operation_channel_24h;
 
 
-create table t_sj_test_device_operation_channel_24h as
+create table t_sj_train_device_operation_channel_24h as
 select t1.event_id,
        t2.operation_channel,
        count(*) as device_operation_channel_cnt_24h
@@ -493,14 +493,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             operation_channel
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -509,10 +509,10 @@ group by t1.event_id,
          t2.operation_channel;
 
 
-drop table if exists t_sj_test_device_pay_scene_24h;
+drop table if exists t_sj_train_device_pay_scene_24h;
 
 
-create table t_sj_test_device_pay_scene_24h as
+create table t_sj_train_device_pay_scene_24h as
 select t1.event_id,
        t2.pay_scene,
        count(*) as device_pay_scene_cnt_24h
@@ -520,14 +520,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             pay_scene
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -536,10 +536,10 @@ group by t1.event_id,
          t2.pay_scene;
 
 
-drop table if exists t_sj_test_device_amt_24h;
+drop table if exists t_sj_train_device_amt_24h;
 
 
-create table t_sj_test_device_amt_24h as
+create table t_sj_train_device_amt_24h as
 select t1.event_id,
        t2.amt,
        count(*) as device_amt_cnt_24h
@@ -547,14 +547,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             amt
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -563,10 +563,10 @@ group by t1.event_id,
          t2.amt;
 
 
-drop table if exists t_sj_test_device_opposing_id_24h;
+drop table if exists t_sj_train_device_opposing_id_24h;
 
 
-create table t_sj_test_device_opposing_id_24h as
+create table t_sj_train_device_opposing_id_24h as
 select t1.event_id,
        t2.opposing_id,
        count(*) as device_opposing_id_cnt_24h
@@ -574,14 +574,14 @@ from
     (select event_id,
             device_sign,
             gmt_occur_unix
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t1
 left outer join
     (select event_id,
             device_sign,
             gmt_occur_unix,
             opposing_id
-     from t_sj_test_data_code_unix
+     from t_sj_train_data_code_unix
      where device_sign is not null) t2 on t1.device_sign = t2.device_sign
 where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t2.gmt_occur_unix <t1.gmt_occur_unix
@@ -592,10 +592,10 @@ group by t1.event_id,
 ---------------------------------------------------离散变量的历史出现频率.
 -- 计算每条样本中用户对应的离散变量在当前样本最近24h内的出现频率[0,1],没有出现为0
 -- 3min内
-drop table if exists t_sj_test_device_scatter_freq_24h;
+drop table if exists t_sj_train_device_scatter_freq_24h;
 
 
-create table t_sj_test_device_scatter_freq_24h as
+create table t_sj_train_device_scatter_freq_24h as
 select t0.event_id,
        case
            when t2.device_client_ip_cnt_24h is null then 0
@@ -645,39 +645,39 @@ select t0.event_id,
            when t13.device_opposing_id_cnt_24h is null then 0
            else t13.device_opposing_id_cnt_24h/t1.device_cnt_24h
        end as device_opposing_id_rate_24h
-from t_sj_test_data_code_unix t0
-left outer join t_sj_test_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_test_device_client_ip_24h t2 on t0.event_id = t2.event_id
+from t_sj_train_data_code_unix t0
+left outer join t_sj_train_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_train_device_client_ip_24h t2 on t0.event_id = t2.event_id
 and t0.client_ip = t2.client_ip
-left outer join t_sj_test_device_network_24h t3 on t0.event_id = t3.event_id
+left outer join t_sj_train_device_network_24h t3 on t0.event_id = t3.event_id
 and t0.network = t3.network
-left outer join t_sj_test_device_user_id_24h t4 on t0.event_id = t4.event_id
+left outer join t_sj_train_device_user_id_24h t4 on t0.event_id = t4.event_id
 and t0.user_id = t4.user_id
-left outer join t_sj_test_device_info_1_24h t5 on t0.event_id = t5.event_id
+left outer join t_sj_train_device_info_1_24h t5 on t0.event_id = t5.event_id
 and t0.info_1 = t5.info_1
-left outer join t_sj_test_device_info_2_24h t6 on t0.event_id = t6.event_id
+left outer join t_sj_train_device_info_2_24h t6 on t0.event_id = t6.event_id
 and t0.info_2 = t6.info_2
-left outer join t_sj_test_device_ip_prov_24h t7 on t0.event_id = t7.event_id
+left outer join t_sj_train_device_ip_prov_24h t7 on t0.event_id = t7.event_id
 and t0.ip_prov = t7.ip_prov
-left outer join t_sj_test_device_ip_city_24h t8 on t0.event_id = t8.event_id
+left outer join t_sj_train_device_ip_city_24h t8 on t0.event_id = t8.event_id
 and t0.ip_city = t8.ip_city
-left outer join t_sj_test_device_mobile_oper_platform_24h t9 on t0.event_id = t9.event_id
+left outer join t_sj_train_device_mobile_oper_platform_24h t9 on t0.event_id = t9.event_id
 and t0.mobile_oper_platform = t9.mobile_oper_platform
-left outer join t_sj_test_device_operation_channel_24h t10 on t0.event_id = t10.event_id
+left outer join t_sj_train_device_operation_channel_24h t10 on t0.event_id = t10.event_id
 and t0.operation_channel = t10.operation_channel
-left outer join t_sj_test_device_pay_scene_24h t11 on t0.event_id = t11.event_id
+left outer join t_sj_train_device_pay_scene_24h t11 on t0.event_id = t11.event_id
 and t0.pay_scene = t11.pay_scene
-left outer join t_sj_test_device_amt_24h t12 on t0.event_id = t12.event_id
+left outer join t_sj_train_device_amt_24h t12 on t0.event_id = t12.event_id
 and t0.amt = t12.amt
-left outer join t_sj_test_device_opposing_id_24h t13 on t0.event_id = t13.event_id
+left outer join t_sj_train_device_opposing_id_24h t13 on t0.event_id = t13.event_id
 and t0.opposing_id = t13.opposing_id;
 
 
 
-drop table if exists t_sj_test_feature_device;
+drop table if exists t_sj_train_feature_device;
 
 
-create table t_sj_test_feature_device as
+create table t_sj_train_feature_device as
 select t0.event_id,
        t1.device_cnt_24h,
        t1.device_ucnt_client_ip_24h,
@@ -720,11 +720,11 @@ select t0.event_id,
        t4.device_opposing_id_rate_24h
 from
     (select event_id
-     from t_sj_test_data_code_unix) t0
-left outer join t_sj_test_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
-left outer join t_sj_test_feature_device_1h_not_now t2 on t0.event_id = t2.event_id
-left outer join t_sj_test_device_time_diff_not_now t3 on t0.event_id = t3.event_id
-left outer join t_sj_test_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;
+     from t_sj_train_data_code_unix) t0
+left outer join t_sj_train_feature_device_24h_not_now t1 on t0.event_id = t1.event_id
+left outer join t_sj_train_feature_device_1h_not_now t2 on t0.event_id = t2.event_id
+left outer join t_sj_train_device_time_diff_not_now t3 on t0.event_id = t3.event_id
+left outer join t_sj_train_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;
 
 
 -- 去除特征中的缺失值
@@ -733,10 +733,10 @@ left outer join t_sj_test_device_scatter_freq_24h t4 on t0.event_id = t4.event_i
 -- 24小时内没有交易样本，则24h变量为0
 -- 1小时内没有交易样本，则1h变量为0
 -- 
-drop table if exists t_sj_test_feature_device_notnull;
+drop table if exists t_sj_train_feature_device_notnull;
 
 
-create table t_sj_test_feature_device_notnull as
+create table t_sj_train_feature_device_notnull as
 select event_id,
        nvl(device_cnt_24h, 0) as device_cnt_24h,
        nvl(device_ucnt_client_ip_24h, 0) as device_ucnt_client_ip_24h,
@@ -777,7 +777,7 @@ select event_id,
        device_pay_scene_rate_24h,
        device_amt_rate_24h,
        device_opposing_id_rate_24h
-from t_sj_test_feature_device;
+from t_sj_train_feature_device;
 
 --------------------------------------用户id特征统计 end------------------------------------------
 -- 查看缺失值分布情况
@@ -821,7 +821,7 @@ select count(*) as cnt,
        count(device_pay_scene_rate_24h) as device_pay_scene_rate_24h,
        count(device_amt_rate_24h) as device_amt_rate_24h,
        count(device_opposing_id_rate_24h) as device_opposing_id_rate_24h
-from t_sj_test_feature_device;
+from t_sj_train_feature_device;
 
 --------------------------------------用户id特征统计 end------------------------------------------
 
