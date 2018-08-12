@@ -82,7 +82,7 @@ where (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400
     and t1.event_id != t2.event_id
 group by t1.event_id;
 
- -- 一小时内的交易次数 和部分离散变量的去重个数
+ -- 样本当前一小时内的交易次数 和部分离散变量的去重个数
 drop table if exists t_sj_train_feature_user_1h_not_now;
 
 
@@ -192,13 +192,14 @@ and t3.gmt_occur_unix = t4.gmt_occur_unix;
 --     and t1.event_id != t2.event_id
 -- group by t1.event_id;
 
+-- 用户上一次交易至今的时间间隔，如果在数据集中是第一次交易，那么时间间隔即为当前时间点减去起始时间点（数据集前一天），确保模拟的时间超过24小时
 drop table if exists t_sj_train_user_time_diff_not_now;
 
 
 create table t_sj_train_user_time_diff_not_now as
 select t3.event_id,
        case
-           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504540800)/3600
+           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504454400)/3600
            else (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600
        end as gmt_occur_unix_user_diff_not_now
 from t_sj_train_data_code_unix t3

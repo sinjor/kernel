@@ -174,7 +174,7 @@ drop table if exists t_sj_test_oppo_time_diff_not_now;
 create table t_sj_test_oppo_time_diff_not_now as
 select t3.event_id,
        case
-           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504540800)/3600
+           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1514995200)/3600
            else (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600
        end as gmt_occur_unix_oppo_diff_not_now
 from t_sj_test_data_code_unix t3

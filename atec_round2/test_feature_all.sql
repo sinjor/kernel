@@ -89,7 +89,10 @@ select event_id,
        nvl(user_ucnt_pay_scene_1h, 0) as user_ucnt_pay_scene_1h,
        nvl(user_sum_amt_1h, 0) as user_sum_amt_1h,
        nvl(user_ucnt_opposing_id_1h, 0) as user_ucnt_opposing_id_1h,
-       gmt_occur_unix_user_diff_not_now,
+       case
+           when gmt_occur_unix_user_diff_not_now>744 then 744
+           else gmt_occur_unix_user_diff_not_now
+       end as gmt_occur_unix_user_diff_not_now,
        user_client_ip_rate_24h,
        user_network_rate_24h,
        user_device_sign_rate_24h,
@@ -102,10 +105,9 @@ select event_id,
        user_pay_scene_rate_24h,
        user_amt_rate_24h,
        user_opposing_id_rate_24h
-
 from t_sj_test_feature_user;
 
------------------------------device----------------------
+ -----------------------------device----------------------
 
 drop table if exists t_sj_test_feature_device;
 
@@ -159,13 +161,13 @@ left outer join t_sj_test_feature_device_1h_not_now t2 on t0.event_id = t2.event
 left outer join t_sj_test_device_time_diff_not_now t3 on t0.event_id = t3.event_id
 left outer join t_sj_test_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;
 
-
--- 去除特征中的缺失值
+ -- 去除特征中的缺失值
 -- rate 特征不会为空，24小时内没有使用过该IP，则设为0
 -- time_diff特征不会为空，如果数据集中第一次交易，则时间间隔为数据集起始时间（起始时间 - 24小时）至当前样本的时间
 -- 24小时内没有交易样本，则24h变量为0
 -- 1小时内没有交易样本，则1h变量为0
--- 
+--
+
 drop table if exists t_sj_test_feature_device_notnull;
 
 
@@ -197,7 +199,10 @@ select event_id,
        nvl(device_ucnt_pay_scene_1h, 0) as device_ucnt_pay_scene_1h,
        nvl(device_sum_amt_1h, 0) as device_sum_amt_1h,
        nvl(device_ucnt_opposing_id_1h, 0) as device_ucnt_opposing_id_1h,
-       gmt_occur_unix_device_diff_not_now,
+       case
+           when gmt_occur_unix_device_diff_not_now>744 then 744
+           else gmt_occur_unix_device_diff_not_now
+       end as gmt_occur_unix_device_diff_not_now,
        device_client_ip_rate_24h,
        device_network_rate_24h,
        device_user_id_rate_24h,
@@ -212,51 +217,48 @@ select event_id,
        device_opposing_id_rate_24h
 from t_sj_test_feature_device;
 
-
---------------------------oppo-----------------------
+ --------------------------oppo-----------------------
 
 drop table if exists t_sj_test_feature_oppo;
 
 
 create table t_sj_test_feature_oppo as
-select 
-t0.event_id,
-t1.oppo_cnt_24h,
-t1.oppo_ucnt_user_id_24h,
-t1.oppo_ucnt_client_ip_24h,
-t1.oppo_ucnt_network_24h,
-t1.oppo_ucnt_device_sign_24h,
-t1.oppo_ucnt_info_1_24h,
-t1.oppo_ucnt_info_2_24h,
-t1.oppo_ucnt_ip_prov_24h,
-t1.oppo_ucnt_ip_city_24h,
-t1.oppo_ucnt_mobile_oper_platform_24h,
-t1.oppo_ucnt_operation_channel_24h,
-t1.oppo_ucnt_pay_scene_24h,
-t1.oppo_sum_amt_24h,
-
-t2.oppo_cnt_1h,
-t2.oppo_ucnt_user_id_1h,
-t2.oppo_ucnt_client_ip_1h,
-t2.oppo_ucnt_network_1h,
-t2.oppo_ucnt_device_sign_1h,
-t2.oppo_ucnt_info_1_1h,
-t2.oppo_ucnt_info_2_1h,
-t2.oppo_ucnt_ip_prov_1h,
-t2.oppo_ucnt_ip_city_1h,
-t2.oppo_ucnt_mobile_oper_platform_1h,
-t2.oppo_ucnt_operation_channel_1h,
-t2.oppo_ucnt_pay_scene_1h,
-t2.oppo_sum_amt_1h,
-t3.gmt_occur_unix_oppo_diff_not_now
- from 
-(select event_id from t_sj_test_data_code_unix) t0 
+select t0.event_id,
+       t1.oppo_cnt_24h,
+       t1.oppo_ucnt_user_id_24h,
+       t1.oppo_ucnt_client_ip_24h,
+       t1.oppo_ucnt_network_24h,
+       t1.oppo_ucnt_device_sign_24h,
+       t1.oppo_ucnt_info_1_24h,
+       t1.oppo_ucnt_info_2_24h,
+       t1.oppo_ucnt_ip_prov_24h,
+       t1.oppo_ucnt_ip_city_24h,
+       t1.oppo_ucnt_mobile_oper_platform_24h,
+       t1.oppo_ucnt_operation_channel_24h,
+       t1.oppo_ucnt_pay_scene_24h,
+       t1.oppo_sum_amt_24h,
+       t2.oppo_cnt_1h,
+       t2.oppo_ucnt_user_id_1h,
+       t2.oppo_ucnt_client_ip_1h,
+       t2.oppo_ucnt_network_1h,
+       t2.oppo_ucnt_device_sign_1h,
+       t2.oppo_ucnt_info_1_1h,
+       t2.oppo_ucnt_info_2_1h,
+       t2.oppo_ucnt_ip_prov_1h,
+       t2.oppo_ucnt_ip_city_1h,
+       t2.oppo_ucnt_mobile_oper_platform_1h,
+       t2.oppo_ucnt_operation_channel_1h,
+       t2.oppo_ucnt_pay_scene_1h,
+       t2.oppo_sum_amt_1h,
+       t3.gmt_occur_unix_oppo_diff_not_now
+from
+    (select event_id
+     from t_sj_test_data_code_unix) t0
 left outer join t_sj_test_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id
 left outer join t_sj_test_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id
 left outer join t_sj_test_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;
 
-
--- 去除特征中的缺失值
+ -- 去除特征中的缺失值
 
 drop table if exists t_sj_test_feature_oppo_notnull;
 
@@ -289,7 +291,10 @@ select event_id,
        nvl(oppo_ucnt_operation_channel_1h, 0) as oppo_ucnt_operation_channel_1h,
        nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,
        nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,
-       gmt_occur_unix_oppo_diff_not_now
+       case
+           when gmt_occur_unix_oppo_diff_not_now>744 then 744
+           else gmt_occur_unix_oppo_diff_not_now
+       end as gmt_occur_unix_oppo_diff_not_now
 from t_sj_test_feature_oppo;
 
 
@@ -309,33 +314,108 @@ select t1.event_id,
        t1.operation_channel,
        t1.pay_scene,
        t1.amt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_cnt_1h / (t2.user_cnt_24h + t2.user_cnt_1h)
+       end as user_cnt_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_client_ip_1h / t2.user_cnt_1h
+       end as user_ucnt_client_ip_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_network_1h / t2.user_cnt_1h
+       end as user_ucnt_network_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_device_sign_1h / t2.user_cnt_1h
+       end as user_ucnt_device_sign_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_info_1_1h / t2.user_cnt_1h
+       end as user_ucnt_info_1_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_info_2_1h / t2.user_cnt_1h
+       end as user_ucnt_info_2_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_ip_prov_1h / t2.user_cnt_1h
+       end as user_ucnt_ip_prov_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_ip_city_1h / t2.user_cnt_1h
+       end as user_ucnt_ip_city_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_mobile_oper_platform_1h / t2.user_cnt_1h
+       end as user_ucnt_mobile_oper_platform_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_operation_channel_1h / t2.user_cnt_1h
+       end as user_ucnt_operation_channel_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_pay_scene_1h / t2.user_cnt_1h
+       end as user_ucnt_pay_scene_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_sum_amt_1h / t2.user_cnt_1h
+       end as user_sum_amt_1h_div_cnt,
+       case
+           when t2.user_cnt_1h = 0 then 0
+           else t2.user_ucnt_opposing_id_1h / t2.user_cnt_1h
+       end as user_ucnt_opposing_id_1h_div_cnt,
        
-       t2.user_cnt_24h,
-       t2.user_ucnt_client_ip_24h,
-       t2.user_ucnt_network_24h,
-       t2.user_ucnt_device_sign_24h,
-       t2.user_ucnt_info_1_24h,
-       t2.user_ucnt_info_2_24h,
-       t2.user_ucnt_ip_prov_24h,
-       t2.user_ucnt_ip_city_24h,
-       t2.user_ucnt_mobile_oper_platform_24h,
-       t2.user_ucnt_operation_channel_24h,
-       t2.user_ucnt_pay_scene_24h,
-       t2.user_sum_amt_24h,
-       t2.user_ucnt_opposing_id_24h,
-       t2.user_cnt_1h,
-       t2.user_ucnt_client_ip_1h,
-       t2.user_ucnt_network_1h,
-       t2.user_ucnt_device_sign_1h,
-       t2.user_ucnt_info_1_1h,
-       t2.user_ucnt_info_2_1h,
-       t2.user_ucnt_ip_prov_1h,
-       t2.user_ucnt_ip_city_1h,
-       t2.user_ucnt_mobile_oper_platform_1h,
-       t2.user_ucnt_operation_channel_1h,
-       t2.user_ucnt_pay_scene_1h,
-       t2.user_sum_amt_1h,
-       t2.user_ucnt_opposing_id_1h,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_client_ip_24h / t2.user_cnt_24h
+       end as user_ucnt_client_ip_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_network_24h / t2.user_cnt_24h
+       end as user_ucnt_network_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_device_sign_24h / t2.user_cnt_24h
+       end as user_ucnt_device_sign_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_info_1_24h / t2.user_cnt_24h
+       end as user_ucnt_info_1_24h,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_info_2_24h / t2.user_cnt_24h
+       end as user_ucnt_info_2_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_ip_prov_24h / t2.user_cnt_24h
+       end as user_ucnt_ip_prov_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_ip_city_24h / t2.user_cnt_24h
+       end as user_ucnt_ip_city_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_mobile_oper_platform_24h / t2.user_cnt_24h
+       end as user_ucnt_mobile_oper_platform_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_operation_channel_24h / t2.user_cnt_24h
+       end as user_ucnt_operation_channel_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_pay_scene_24h / t2.user_cnt_24h
+       end as user_ucnt_pay_scene_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_sum_amt_24h / t2.user_cnt_24h
+       end as user_sum_amt_24h_div_cnt,
+       case
+           when t2.user_cnt_24h = 0 then 0
+           else t2.user_ucnt_opposing_id_24h / t2.user_cnt_24h
+       end as user_ucnt_opposing_id_24h_div_cnt,
+
        t2.gmt_occur_unix_user_diff_not_now,
        t2.user_client_ip_rate_24h,
        t2.user_network_rate_24h,
@@ -424,7 +504,7 @@ left outer join t_sj_test_feature_device_notnull t3 on t1.event_id = t3.event_id
 left outer join t_sj_test_feature_oppo_notnull t4 on t1.event_id = t4.event_id;
 
 
-
+-- 计算样本概率
 drop table if exists result;
 
 
@@ -433,6 +513,39 @@ select event_id as id,
        (1 - prediction_score) as score
 from result_0810; 
 
+
+-- 计算atec评分标准
+-- TPR1：当FPR等于0.001时的TPR
+
+-- TPR2：当FPR等于0.005时的TPR
+
+-- TPR3：当FPR等于0.01时的TPR
+
+-- 模型成绩 = 0.4 * TPR1 + 0.3 * TPR2 + 0.3 * TPR3
+select sum(atec_score) as atec_score from 
+(select fpr,
+       recall * 0.3 as atec_score
+from t_train_result_0811
+where fpr in
+        (select max(fpr) as fpr
+         from t_train_result_0811
+         where fpr <=0.01 )
+union all
+select fpr,
+       recall * 0.3 as atec_score
+from t_train_result_0811
+where fpr in
+        (select max(fpr) as fpr
+         from t_train_result_0811
+         where fpr <=0.005 )
+union all
+select fpr,
+       recall * 0.4 as atec_score
+from t_train_result_0811
+where fpr in
+        (select max(fpr) as fpr
+         from t_train_result_0811
+         where fpr <=0.001 ))t2
 
 
  

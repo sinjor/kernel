@@ -165,7 +165,7 @@ drop table if exists t_sj_train_device_time_diff_not_now;
 create table t_sj_train_device_time_diff_not_now as
 select t3.event_id,
        case
-           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504540800)/3600
+           when t4.gmt_occur_unix_last is null then (t3.gmt_occur_unix - 1504454400)/3600
            else (t3.gmt_occur_unix - t4.gmt_occur_unix_last)/3600
        end as gmt_occur_unix_device_diff_not_now
 from t_sj_train_data_code_unix t3
