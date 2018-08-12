@@ -176,7 +176,7 @@ select t3.event_id,
        t4.client_ip,
        t4.user_client_ip_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.client_ip,
@@ -198,8 +198,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.client_ip) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.client_ip = t4.client_ip;
+and t3.gmt_occur_unix = t4.gmt_occur_unix;
 
 
 drop table if exists t_sj_test_user_network_24h;
@@ -210,7 +209,7 @@ select t3.event_id,
        t4.network,
        t4.user_network_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.network,
@@ -232,8 +231,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.network) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.network = t4.network;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_device_sign_24h;
@@ -244,7 +242,7 @@ select t3.event_id,
        t4.device_sign,
        t4.user_device_sign_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.device_sign,
@@ -266,8 +264,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.device_sign) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.device_sign = t4.device_sign;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_info_1_24h;
@@ -278,7 +275,7 @@ select t3.event_id,
        t4.info_1,
        t4.user_info_1_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.info_1,
@@ -300,8 +297,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.info_1) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.info_1 = t4.info_1;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_info_2_24h;
@@ -312,7 +308,7 @@ select t3.event_id,
        t4.info_2,
        t4.user_info_2_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.info_2,
@@ -334,8 +330,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.info_2) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.info_2 = t4.info_2;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_ip_prov_24h;
@@ -346,7 +341,7 @@ select t3.event_id,
        t4.ip_prov,
        t4.user_ip_prov_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.ip_prov,
@@ -368,8 +363,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.ip_prov) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.ip_prov = t4.ip_prov;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_ip_city_24h;
@@ -380,7 +374,7 @@ select t3.event_id,
        t4.ip_city,
        t4.user_ip_city_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.ip_city,
@@ -402,8 +396,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.ip_city) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.ip_city = t4.ip_city;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_mobile_oper_platform_24h;
@@ -414,7 +407,7 @@ select t3.event_id,
        t4.mobile_oper_platform,
        t4.user_mobile_oper_platform_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.mobile_oper_platform,
@@ -436,8 +429,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.mobile_oper_platform) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.mobile_oper_platform = t4.mobile_oper_platform;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_operation_channel_24h;
@@ -448,7 +440,7 @@ select t3.event_id,
        t4.operation_channel,
        t4.user_operation_channel_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.operation_channel,
@@ -470,8 +462,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.operation_channel) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.operation_channel = t4.operation_channel;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_pay_scene_24h;
@@ -482,7 +473,7 @@ select t3.event_id,
        t4.pay_scene,
        t4.user_pay_scene_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.pay_scene,
@@ -504,8 +495,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.pay_scene) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.pay_scene = t4.pay_scene;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_amt_24h;
@@ -516,7 +506,7 @@ select t3.event_id,
        t4.amt,
        t4.user_amt_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.amt,
@@ -538,8 +528,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.amt) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.amt = t4.amt;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
 
 drop table if exists t_sj_test_user_opposing_id_24h;
@@ -550,7 +539,7 @@ select t3.event_id,
        t4.opposing_id,
        t4.user_opposing_id_cnt_24h
 from t_sj_test_data_code_unix t3
-left outer join
+inner join
     (select t1.user_id,
             t1.gmt_occur_unix,
             t2.opposing_id,
@@ -572,8 +561,7 @@ left outer join
      group by t1.user_id,
               t1.gmt_occur_unix,
               t2.opposing_id) t4 on t3.user_id = t4.user_id
-and t3.gmt_occur_unix = t4.gmt_occur_unix
-and t3.opposing_id = t4.opposing_id;
+and t3.gmt_occur_unix = t4.gmt_occur_unix ;
 
  ---------------------------------------------------离散变量的历史出现频率.------------------------------
  -- 计算每条样本中用户对应的离散变量在当前样本最近24h内的出现频率[0,1],没有出现为0
