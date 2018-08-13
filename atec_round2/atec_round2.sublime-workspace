@@ -4,6 +4,22 @@
 		"selected_items":
 		[
 			[
+				"event",
+				"event_cnt"
+			],
+			[
+				"evnet",
+				"event_id"
+			],
+			[
+				"cnt",
+				"cnt_order"
+			],
+			[
+				"gm",
+				"gmt_occur_unix"
+			],
+			[
 				"t_sj_train",
 				"t_sj_train_data_code"
 			],
@@ -178,10 +194,6 @@
 			[
 				"group",
 				"group_name"
-			],
-			[
-				"event",
-				"event_name"
 			],
 			[
 				"dist_e",
@@ -480,10 +492,6 @@
 				"event_cid"
 			],
 			[
-				"evnet",
-				"event_cid"
-			],
-			[
 				"event_contac",
 				"event_contactsname"
 			],
@@ -506,28 +514,19 @@
 			[
 				"event_ip",
 				"event_iplatitude"
-			],
-			[
-				"firt",
-				"cid_first_loan"
-			],
-			[
-				"sinjor_",
-				"sinjor_train_data_rand"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"contents": "\ndrop table if exists t_sj_test_feature_user;\n\n\ncreate table t_sj_test_feature_user as\nselect t0.event_id,\n       t1.user_cnt_24h,\n       t1.user_ucnt_client_ip_24h,\n       t1.user_ucnt_network_24h,\n       t1.user_ucnt_device_sign_24h,\n       t1.user_ucnt_info_1_24h,\n       t1.user_ucnt_info_2_24h,\n       t1.user_ucnt_ip_prov_24h,\n       t1.user_ucnt_ip_city_24h,\n       t1.user_ucnt_mobile_oper_platform_24h,\n       t1.user_ucnt_operation_channel_24h,\n       t1.user_ucnt_pay_scene_24h,\n       t1.user_sum_amt_24h,\n       t1.user_ucnt_opposing_id_24h,\n       t2.user_cnt_1h,\n       t2.user_ucnt_client_ip_1h,\n       t2.user_ucnt_network_1h,\n       t2.user_ucnt_device_sign_1h,\n       t2.user_ucnt_info_1_1h,\n       t2.user_ucnt_info_2_1h,\n       t2.user_ucnt_ip_prov_1h,\n       t2.user_ucnt_ip_city_1h,\n       t2.user_ucnt_mobile_oper_platform_1h,\n       t2.user_ucnt_operation_channel_1h,\n       t2.user_ucnt_pay_scene_1h,\n       t2.user_sum_amt_1h,\n       t2.user_ucnt_opposing_id_1h,\n       t3.gmt_occur_unix_user_diff_not_now,\n       t4.user_client_ip_rate_24h,\n       t4.user_network_rate_24h,\n       t4.user_device_sign_rate_24h,\n       t4.user_info_1_rate_24h,\n       t4.user_info_2_rate_24h,\n       t4.user_ip_prov_rate_24h,\n       t4.user_ip_city_rate_24h,\n       t4.user_mobile_oper_platform_rate_24h,\n       t4.user_operation_channel_rate_24h,\n       t4.user_pay_scene_rate_24h,\n       t4.user_amt_rate_24h,\n       t4.user_opposing_id_rate_24h\nfrom\n    (select event_id\n     from t_sj_test_data_code_unix) t0\nleft outer join t_sj_test_feature_user_24h_not_now t1 on t0.event_id = t1.event_id\nleft outer join t_sj_test_feature_user_1h_not_now t2 on t0.event_id = t2.event_id\nleft outer join t_sj_test_user_time_diff_not_now t3 on t0.event_id = t3.event_id\nleft outer join t_sj_test_user_scatter_freq_24h t4 on t0.event_id = t4.event_id;\n\n -- 去除特征中的缺失值\n-- rate 特征不会为空，24小时内没有使用过该IP，则设为0\n-- time_diff特征不会为空，如果数据集中第一次交易，则时间间隔为数据集起始时间（起始时间 - 24小时）至当前样本的时间\n-- 24小时内没有交易样本，则24h变量为0\n-- 1小时内没有交易样本，则1h变量为0\n--\n\ndrop table if exists t_sj_test_feature_user_notnull;\n\n\ncreate table t_sj_test_feature_user_notnull as\nselect event_id,\n       nvl(user_cnt_24h, 0) as user_cnt_24h,\n       nvl(user_ucnt_client_ip_24h, 0) as user_ucnt_client_ip_24h,\n       nvl(user_ucnt_network_24h, 0) as user_ucnt_network_24h,\n       nvl(user_ucnt_device_sign_24h, 0) as user_ucnt_device_sign_24h,\n       nvl(user_ucnt_info_1_24h, 0) as user_ucnt_info_1_24h,\n       nvl(user_ucnt_info_2_24h, 0) as user_ucnt_info_2_24h,\n       nvl(user_ucnt_ip_prov_24h, 0) as user_ucnt_ip_prov_24h,\n       nvl(user_ucnt_ip_city_24h, 0) as user_ucnt_ip_city_24h,\n       nvl(user_ucnt_mobile_oper_platform_24h, 0) as user_ucnt_mobile_oper_platform_24h,\n       nvl(user_ucnt_operation_channel_24h, 0) as user_ucnt_operation_channel_24h,\n       nvl(user_ucnt_pay_scene_24h, 0) as user_ucnt_pay_scene_24h,\n       nvl(user_sum_amt_24h, 0) as user_sum_amt_24h,\n       nvl(user_ucnt_opposing_id_24h, 0) as user_ucnt_opposing_id_24h,\n       nvl(user_cnt_1h, 0) as user_cnt_1h,\n       nvl(user_ucnt_client_ip_1h, 0) as user_ucnt_client_ip_1h,\n       nvl(user_ucnt_network_1h, 0) as user_ucnt_network_1h,\n       nvl(user_ucnt_device_sign_1h, 0) as user_ucnt_device_sign_1h,\n       nvl(user_ucnt_info_1_1h, 0) as user_ucnt_info_1_1h,\n       nvl(user_ucnt_info_2_1h, 0) as user_ucnt_info_2_1h,\n       nvl(user_ucnt_ip_prov_1h, 0) as user_ucnt_ip_prov_1h,\n       nvl(user_ucnt_ip_city_1h, 0) as user_ucnt_ip_city_1h,\n       nvl(user_ucnt_mobile_oper_platform_1h, 0) as user_ucnt_mobile_oper_platform_1h,\n       nvl(user_ucnt_operation_channel_1h, 0) as user_ucnt_operation_channel_1h,\n       nvl(user_ucnt_pay_scene_1h, 0) as user_ucnt_pay_scene_1h,\n       nvl(user_sum_amt_1h, 0) as user_sum_amt_1h,\n       nvl(user_ucnt_opposing_id_1h, 0) as user_ucnt_opposing_id_1h,\n       gmt_occur_unix_user_diff_not_now,\n       user_client_ip_rate_24h,\n       user_network_rate_24h,\n       user_device_sign_rate_24h,\n       user_info_1_rate_24h,\n       user_info_2_rate_24h,\n       user_ip_prov_rate_24h,\n       user_ip_city_rate_24h,\n       user_mobile_oper_platform_rate_24h,\n       user_operation_channel_rate_24h,\n       user_pay_scene_rate_24h,\n       user_amt_rate_24h,\n       user_opposing_id_rate_24h\n\nfrom t_sj_test_feature_user;\n\n-----------------------------device----------------------\n\ndrop table if exists t_sj_test_feature_device;\n\n\ncreate table t_sj_test_feature_device as\nselect t0.event_id,\n       t1.device_cnt_24h,\n       t1.device_ucnt_client_ip_24h,\n       t1.device_ucnt_network_24h,\n       t1.device_ucnt_user_id_24h,\n       t1.device_ucnt_info_1_24h,\n       t1.device_ucnt_info_2_24h,\n       t1.device_ucnt_ip_prov_24h,\n       t1.device_ucnt_ip_city_24h,\n       t1.device_ucnt_mobile_oper_platform_24h,\n       t1.device_ucnt_operation_channel_24h,\n       t1.device_ucnt_pay_scene_24h,\n       t1.device_sum_amt_24h,\n       t1.device_ucnt_opposing_id_24h,\n       t2.device_cnt_1h,\n       t2.device_ucnt_client_ip_1h,\n       t2.device_ucnt_network_1h,\n       t2.device_ucnt_user_id_1h,\n       t2.device_ucnt_info_1_1h,\n       t2.device_ucnt_info_2_1h,\n       t2.device_ucnt_ip_prov_1h,\n       t2.device_ucnt_ip_city_1h,\n       t2.device_ucnt_mobile_oper_platform_1h,\n       t2.device_ucnt_operation_channel_1h,\n       t2.device_ucnt_pay_scene_1h,\n       t2.device_sum_amt_1h,\n       t2.device_ucnt_opposing_id_1h,\n       t3.gmt_occur_unix_device_diff_not_now,\n       t4.device_client_ip_rate_24h,\n       t4.device_network_rate_24h,\n       t4.device_user_id_rate_24h,\n       t4.device_info_1_rate_24h,\n       t4.device_info_2_rate_24h,\n       t4.device_ip_prov_rate_24h,\n       t4.device_ip_city_rate_24h,\n       t4.device_mobile_oper_platform_rate_24h,\n       t4.device_operation_channel_rate_24h,\n       t4.device_pay_scene_rate_24h,\n       t4.device_amt_rate_24h,\n       t4.device_opposing_id_rate_24h\nfrom\n    (select event_id\n     from t_sj_test_data_code_unix) t0\nleft outer join t_sj_test_feature_device_24h_not_now t1 on t0.event_id = t1.event_id\nleft outer join t_sj_test_feature_device_1h_not_now t2 on t0.event_id = t2.event_id\nleft outer join t_sj_test_device_time_diff_not_now t3 on t0.event_id = t3.event_id\nleft outer join t_sj_test_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;\n\n\n-- 去除特征中的缺失值\n-- rate 特征不会为空，24小时内没有使用过该IP，则设为0\n-- time_diff特征不会为空，如果数据集中第一次交易，则时间间隔为数据集起始时间（起始时间 - 24小时）至当前样本的时间\n-- 24小时内没有交易样本，则24h变量为0\n-- 1小时内没有交易样本，则1h变量为0\n-- \ndrop table if exists t_sj_test_feature_device_notnull;\n\n\ncreate table t_sj_test_feature_device_notnull as\nselect event_id,\n       nvl(device_cnt_24h, 0) as device_cnt_24h,\n       nvl(device_ucnt_client_ip_24h, 0) as device_ucnt_client_ip_24h,\n       nvl(device_ucnt_network_24h, 0) as device_ucnt_network_24h,\n       nvl(device_ucnt_user_id_24h, 0) as device_ucnt_user_id_24h,\n       nvl(device_ucnt_info_1_24h, 0) as device_ucnt_info_1_24h,\n       nvl(device_ucnt_info_2_24h, 0) as device_ucnt_info_2_24h,\n       nvl(device_ucnt_ip_prov_24h, 0) as device_ucnt_ip_prov_24h,\n       nvl(device_ucnt_ip_city_24h, 0) as device_ucnt_ip_city_24h,\n       nvl(device_ucnt_mobile_oper_platform_24h, 0) as device_ucnt_mobile_oper_platform_24h,\n       nvl(device_ucnt_operation_channel_24h, 0) as device_ucnt_operation_channel_24h,\n       nvl(device_ucnt_pay_scene_24h, 0) as device_ucnt_pay_scene_24h,\n       nvl(device_sum_amt_24h, 0) as device_sum_amt_24h,\n       nvl(device_ucnt_opposing_id_24h, 0) as device_ucnt_opposing_id_24h,\n       nvl(device_cnt_1h, 0) as device_cnt_1h,\n       nvl(device_ucnt_client_ip_1h, 0) as device_ucnt_client_ip_1h,\n       nvl(device_ucnt_network_1h, 0) as device_ucnt_network_1h,\n       nvl(device_ucnt_user_id_1h, 0) as device_ucnt_user_id_1h,\n       nvl(device_ucnt_info_1_1h, 0) as device_ucnt_info_1_1h,\n       nvl(device_ucnt_info_2_1h, 0) as device_ucnt_info_2_1h,\n       nvl(device_ucnt_ip_prov_1h, 0) as device_ucnt_ip_prov_1h,\n       nvl(device_ucnt_ip_city_1h, 0) as device_ucnt_ip_city_1h,\n       nvl(device_ucnt_mobile_oper_platform_1h, 0) as device_ucnt_mobile_oper_platform_1h,\n       nvl(device_ucnt_operation_channel_1h, 0) as device_ucnt_operation_channel_1h,\n       nvl(device_ucnt_pay_scene_1h, 0) as device_ucnt_pay_scene_1h,\n       nvl(device_sum_amt_1h, 0) as device_sum_amt_1h,\n       nvl(device_ucnt_opposing_id_1h, 0) as device_ucnt_opposing_id_1h,\n       gmt_occur_unix_device_diff_not_now,\n       device_client_ip_rate_24h,\n       device_network_rate_24h,\n       device_user_id_rate_24h,\n       device_info_1_rate_24h,\n       device_info_2_rate_24h,\n       device_ip_prov_rate_24h,\n       device_ip_city_rate_24h,\n       device_mobile_oper_platform_rate_24h,\n       device_operation_channel_rate_24h,\n       device_pay_scene_rate_24h,\n       device_amt_rate_24h,\n       device_opposing_id_rate_24h\nfrom t_sj_test_feature_device;\n\n\n--------------------------oppo-----------------------\n\ndrop table if exists t_sj_test_feature_oppo;\n\n\ncreate table t_sj_test_feature_oppo as\nselect \nt0.event_id,\nt1.oppo_cnt_24h,\nt1.oppo_ucnt_user_id_24h,\nt1.oppo_ucnt_client_ip_24h,\nt1.oppo_ucnt_network_24h,\nt1.oppo_ucnt_device_sign_24h,\nt1.oppo_ucnt_info_1_24h,\nt1.oppo_ucnt_info_2_24h,\nt1.oppo_ucnt_ip_prov_24h,\nt1.oppo_ucnt_ip_city_24h,\nt1.oppo_ucnt_mobile_oper_platform_24h,\nt1.oppo_ucnt_operation_channel_24h,\nt1.oppo_ucnt_pay_scene_24h,\nt1.oppo_sum_amt_24h,\n\nt2.oppo_cnt_1h,\nt2.oppo_ucnt_user_id_1h,\nt2.oppo_ucnt_client_ip_1h,\nt2.oppo_ucnt_network_1h,\nt2.oppo_ucnt_device_sign_1h,\nt2.oppo_ucnt_info_1_1h,\nt2.oppo_ucnt_info_2_1h,\nt2.oppo_ucnt_ip_prov_1h,\nt2.oppo_ucnt_ip_city_1h,\nt2.oppo_ucnt_mobile_oper_platform_1h,\nt2.oppo_ucnt_operation_channel_1h,\nt2.oppo_ucnt_pay_scene_1h,\nt2.oppo_sum_amt_1h,\nt3.gmt_occur_unix_oppo_diff_not_now\n from \n(select event_id from t_sj_test_data_code_unix) t0 \nleft outer join t_sj_test_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id\nleft outer join t_sj_test_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id\nleft outer join t_sj_test_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;\n\n\n-- 去除特征中的缺失值\n\ndrop table if exists t_sj_test_feature_oppo_notnull;\n\n\ncreate table t_sj_test_feature_oppo_notnull as\nselect event_id,\n       nvl(oppo_cnt_24h, 0) as oppo_cnt_24h,\n       nvl(oppo_ucnt_user_id_24h, 0) as oppo_ucnt_user_id_24h,\n       nvl(oppo_ucnt_client_ip_24h, 0) as oppo_ucnt_client_ip_24h,\n       nvl(oppo_ucnt_network_24h, 0) as oppo_ucnt_network_24h,\n       nvl(oppo_ucnt_device_sign_24h, 0) as oppo_ucnt_device_sign_24h,\n       nvl(oppo_ucnt_info_1_24h, 0) as oppo_ucnt_info_1_24h,\n       nvl(oppo_ucnt_info_2_24h, 0) as oppo_ucnt_info_2_24h,\n       nvl(oppo_ucnt_ip_prov_24h, 0) as oppo_ucnt_ip_prov_24h,\n       nvl(oppo_ucnt_ip_city_24h, 0) as oppo_ucnt_ip_city_24h,\n       nvl(oppo_ucnt_mobile_oper_platform_24h, 0) as oppo_ucnt_mobile_oper_platform_24h,\n       nvl(oppo_ucnt_operation_channel_24h, 0) as oppo_ucnt_operation_channel_24h,\n       nvl(oppo_ucnt_pay_scene_24h, 0) as oppo_ucnt_pay_scene_24h,\n       nvl(oppo_sum_amt_24h, 0) as oppo_sum_amt_24h,\n       nvl(oppo_cnt_1h, 0) as oppo_cnt_1h,\n       nvl(oppo_ucnt_user_id_1h, 0) as oppo_ucnt_user_id_1h,\n       nvl(oppo_ucnt_client_ip_1h, 0) as oppo_ucnt_client_ip_1h,\n       nvl(oppo_ucnt_network_1h, 0) as oppo_ucnt_network_1h,\n       nvl(oppo_ucnt_device_sign_1h, 0) as oppo_ucnt_device_sign_1h,\n       nvl(oppo_ucnt_info_1_1h, 0) as oppo_ucnt_info_1_1h,\n       nvl(oppo_ucnt_info_2_1h, 0) as oppo_ucnt_info_2_1h,\n       nvl(oppo_ucnt_ip_prov_1h, 0) as oppo_ucnt_ip_prov_1h,\n       nvl(oppo_ucnt_ip_city_1h, 0) as oppo_ucnt_ip_city_1h,\n       nvl(oppo_ucnt_mobile_oper_platform_1h, 0) as oppo_ucnt_mobile_oper_platform_1h,\n       nvl(oppo_ucnt_operation_channel_1h, 0) as oppo_ucnt_operation_channel_1h,\n       nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,\n       nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,\n       gmt_occur_unix_oppo_diff_not_now\nfrom t_sj_test_feature_oppo;\n\n\ndrop table if exists t_sj_test_feature_data;\n\ncreate table t_sj_test_feature_data as\nselect t1.event_id,\n       t1.gmt_occur,\n       t1.hour,\n       t1.hour_bin,\n       t1.network,\n       -- t1.info_1,\n -- t1.info_2,\n\n       t1.is_one_people,\n       t1.mobile_oper_platform,\n       t1.operation_channel,\n       t1.pay_scene,\n       t1.amt,\n       \n       t2.user_cnt_24h,\n       t2.user_ucnt_client_ip_24h,\n       t2.user_ucnt_network_24h,\n       t2.user_ucnt_device_sign_24h,\n       t2.user_ucnt_info_1_24h,\n       t2.user_ucnt_info_2_24h,\n       t2.user_ucnt_ip_prov_24h,\n       t2.user_ucnt_ip_city_24h,\n       t2.user_ucnt_mobile_oper_platform_24h,\n       t2.user_ucnt_operation_channel_24h,\n       t2.user_ucnt_pay_scene_24h,\n       t2.user_sum_amt_24h,\n       t2.user_ucnt_opposing_id_24h,\n       t2.user_cnt_1h,\n       t2.user_ucnt_client_ip_1h,\n       t2.user_ucnt_network_1h,\n       t2.user_ucnt_device_sign_1h,\n       t2.user_ucnt_info_1_1h,\n       t2.user_ucnt_info_2_1h,\n       t2.user_ucnt_ip_prov_1h,\n       t2.user_ucnt_ip_city_1h,\n       t2.user_ucnt_mobile_oper_platform_1h,\n       t2.user_ucnt_operation_channel_1h,\n       t2.user_ucnt_pay_scene_1h,\n       t2.user_sum_amt_1h,\n       t2.user_ucnt_opposing_id_1h,\n       t2.gmt_occur_unix_user_diff_not_now,\n       t2.user_client_ip_rate_24h,\n       t2.user_network_rate_24h,\n       t2.user_device_sign_rate_24h,\n       t2.user_info_1_rate_24h,\n       t2.user_info_2_rate_24h,\n       t2.user_ip_prov_rate_24h,\n       t2.user_ip_city_rate_24h,\n       t2.user_mobile_oper_platform_rate_24h,\n       t2.user_operation_channel_rate_24h,\n       t2.user_pay_scene_rate_24h,\n       t2.user_amt_rate_24h,\n       t2.user_opposing_id_rate_24h,\n\n\n       t3.device_cnt_24h,\n       t3.device_ucnt_client_ip_24h,\n       t3.device_ucnt_network_24h,\n       t3.device_ucnt_user_id_24h,\n       t3.device_ucnt_info_1_24h,\n       t3.device_ucnt_info_2_24h,\n       t3.device_ucnt_ip_prov_24h,\n       t3.device_ucnt_ip_city_24h,\n       t3.device_ucnt_mobile_oper_platform_24h,\n       t3.device_ucnt_operation_channel_24h,\n       t3.device_ucnt_pay_scene_24h,\n       t3.device_sum_amt_24h,\n       t3.device_ucnt_opposing_id_24h,\n       t3.device_cnt_1h,\n       t3.device_ucnt_client_ip_1h,\n       t3.device_ucnt_network_1h,\n       t3.device_ucnt_user_id_1h,\n       t3.device_ucnt_info_1_1h,\n       t3.device_ucnt_info_2_1h,\n       t3.device_ucnt_ip_prov_1h,\n       t3.device_ucnt_ip_city_1h,\n       t3.device_ucnt_mobile_oper_platform_1h,\n       t3.device_ucnt_operation_channel_1h,\n       t3.device_ucnt_pay_scene_1h,\n       t3.device_sum_amt_1h,\n       t3.device_ucnt_opposing_id_1h,\n       t3.gmt_occur_unix_device_diff_not_now,\n       t3.device_client_ip_rate_24h,\n       t3.device_network_rate_24h,\n       t3.device_user_id_rate_24h,\n       t3.device_info_1_rate_24h,\n       t3.device_info_2_rate_24h,\n       t3.device_ip_prov_rate_24h,\n       t3.device_ip_city_rate_24h,\n       t3.device_mobile_oper_platform_rate_24h,\n       t3.device_operation_channel_rate_24h,\n       t3.device_pay_scene_rate_24h,\n       t3.device_amt_rate_24h,\n       t3.device_opposing_id_rate_24h,\n\n       t4.oppo_cnt_24h,\n       t4.oppo_ucnt_user_id_24h,\n       t4.oppo_ucnt_client_ip_24h,\n       t4.oppo_ucnt_network_24h,\n       t4.oppo_ucnt_device_sign_24h,\n       t4.oppo_ucnt_info_1_24h,\n       t4.oppo_ucnt_info_2_24h,\n       t4.oppo_ucnt_ip_prov_24h,\n       t4.oppo_ucnt_ip_city_24h,\n       t4.oppo_ucnt_mobile_oper_platform_24h,\n       t4.oppo_ucnt_operation_channel_24h,\n       t4.oppo_ucnt_pay_scene_24h,\n       t4.oppo_sum_amt_24h,\n       t4.oppo_cnt_1h,\n       t4.oppo_ucnt_user_id_1h,\n       t4.oppo_ucnt_client_ip_1h,\n       t4.oppo_ucnt_network_1h,\n       t4.oppo_ucnt_device_sign_1h,\n       t4.oppo_ucnt_info_1_1h,\n       t4.oppo_ucnt_info_2_1h,\n       t4.oppo_ucnt_ip_prov_1h,\n       t4.oppo_ucnt_ip_city_1h,\n       t4.oppo_ucnt_mobile_oper_platform_1h,\n       t4.oppo_ucnt_operation_channel_1h,\n       t4.oppo_ucnt_pay_scene_1h,\n       t4.oppo_sum_amt_1h,\n       t4.gmt_occur_unix_oppo_diff_not_now\nfrom t_sj_test_feature_base t1\nleft outer join t_sj_test_feature_user_notnull t2 on t1.event_id = t2.event_id\nleft outer join t_sj_test_feature_device_notnull t3 on t1.event_id = t3.event_id\nleft outer join t_sj_test_feature_oppo_notnull t4 on t1.event_id = t4.event_id;\n\n\n\ndrop table if exists result;\n\n\ncreate table result as\nselect event_id as id,\n       (1 - prediction_score) as score\nfrom result_0810; \n\n\n\n \n-- left outer join\n--     (select event_id,\n--             is_fraud\n--      from t_sj_train_data_code_unix) t3 on t1.event_id = t3.event_id;\n\n-- drop table if exists t_sj_train_dataset;\n\n-- create table t_sj_train_dataset as\n-- select *\n-- from t_sj_train_feature_data\n-- where gmt_occur <'2017-10-20 00';\n\n-- drop table if exists t_sj_tset_dataset;\n\n-- create table t_sj_tset_dataset as\n-- select *\n-- from t_sj_train_feature_data\n-- where gmt_occur >='2017-10-20 00';\n\n-- select count(*),\n--        count(*)/ 9600000\n-- from t_sj_train_feature_data\n-- where gmt_occur >'2017-10-20 00'\n\n-- select count(event_id) as event_id_cnt,\n--        count(hour) as hour_cnt,\n--        count(hour_bin) as hour_bin_cnt,\n--        count(network) as network_cnt,\n--        count(info_1) as info_1_cnt,\n--        count(info_2) as info_2_cnt,\n--        count(is_one_people) as is_one_people_cnt,\n--        count(mobile_oper_platform) as mobile_oper_platform_cnt,\n--        count(operation_channel) as operation_channel_cnt,\n--        count(pay_scene) as pay_scene_cnt,\n--        count(amt) as amt_cnt\n-- from t_sj_train_feature_data;\n\n\n",
+			"contents": "\ndrop table if exists t_sj_test_feature_user;\n\n\ncreate table t_sj_test_feature_user as\nselect t0.event_id,\n       t1.user_cnt_24h,\n       t1.user_ucnt_client_ip_24h,\n       t1.user_ucnt_network_24h,\n       t1.user_ucnt_device_sign_24h,\n       t1.user_ucnt_info_1_24h,\n       t1.user_ucnt_info_2_24h,\n       t1.user_ucnt_ip_prov_24h,\n       t1.user_ucnt_ip_city_24h,\n       t1.user_ucnt_mobile_oper_platform_24h,\n       t1.user_ucnt_operation_channel_24h,\n       t1.user_ucnt_pay_scene_24h,\n       t1.user_sum_amt_24h,\n       t1.user_ucnt_opposing_id_24h,\n       t2.user_cnt_1h,\n       t2.user_ucnt_client_ip_1h,\n       t2.user_ucnt_network_1h,\n       t2.user_ucnt_device_sign_1h,\n       t2.user_ucnt_info_1_1h,\n       t2.user_ucnt_info_2_1h,\n       t2.user_ucnt_ip_prov_1h,\n       t2.user_ucnt_ip_city_1h,\n       t2.user_ucnt_mobile_oper_platform_1h,\n       t2.user_ucnt_operation_channel_1h,\n       t2.user_ucnt_pay_scene_1h,\n       t2.user_sum_amt_1h,\n       t2.user_ucnt_opposing_id_1h,\n       t3.gmt_occur_unix_user_diff_not_now,\n       t4.user_client_ip_rate_24h,\n       t4.user_network_rate_24h,\n       t4.user_device_sign_rate_24h,\n       t4.user_info_1_rate_24h,\n       t4.user_info_2_rate_24h,\n       t4.user_ip_prov_rate_24h,\n       t4.user_ip_city_rate_24h,\n       t4.user_mobile_oper_platform_rate_24h,\n       t4.user_operation_channel_rate_24h,\n       t4.user_pay_scene_rate_24h,\n       t4.user_amt_rate_24h,\n       t4.user_opposing_id_rate_24h\nfrom\n    (select event_id\n     from t_sj_test_data_code_unix) t0\nleft outer join t_sj_test_feature_user_24h_not_now t1 on t0.event_id = t1.event_id\nleft outer join t_sj_test_feature_user_1h_not_now t2 on t0.event_id = t2.event_id\nleft outer join t_sj_test_user_time_diff_not_now t3 on t0.event_id = t3.event_id\nleft outer join t_sj_test_user_scatter_freq_24h t4 on t0.event_id = t4.event_id;\n\n -- 去除特征中的缺失值\n-- rate 特征不会为空，24小时内没有使用过该IP，则设为0\n-- time_diff特征不会为空，如果数据集中第一次交易，则时间间隔为数据集起始时间（起始时间 - 24小时）至当前样本的时间\n-- 24小时内没有交易样本，则24h变量为0\n-- 1小时内没有交易样本，则1h变量为0\n--\n\ndrop table if exists t_sj_test_feature_user_notnull;\n\n\ncreate table t_sj_test_feature_user_notnull as\nselect event_id,\n       nvl(user_cnt_24h, 0) as user_cnt_24h,\n       nvl(user_ucnt_client_ip_24h, 0) as user_ucnt_client_ip_24h,\n       nvl(user_ucnt_network_24h, 0) as user_ucnt_network_24h,\n       nvl(user_ucnt_device_sign_24h, 0) as user_ucnt_device_sign_24h,\n       nvl(user_ucnt_info_1_24h, 0) as user_ucnt_info_1_24h,\n       nvl(user_ucnt_info_2_24h, 0) as user_ucnt_info_2_24h,\n       nvl(user_ucnt_ip_prov_24h, 0) as user_ucnt_ip_prov_24h,\n       nvl(user_ucnt_ip_city_24h, 0) as user_ucnt_ip_city_24h,\n       nvl(user_ucnt_mobile_oper_platform_24h, 0) as user_ucnt_mobile_oper_platform_24h,\n       nvl(user_ucnt_operation_channel_24h, 0) as user_ucnt_operation_channel_24h,\n       nvl(user_ucnt_pay_scene_24h, 0) as user_ucnt_pay_scene_24h,\n       nvl(user_sum_amt_24h, 0) as user_sum_amt_24h,\n       nvl(user_ucnt_opposing_id_24h, 0) as user_ucnt_opposing_id_24h,\n       nvl(user_cnt_1h, 0) as user_cnt_1h,\n       nvl(user_ucnt_client_ip_1h, 0) as user_ucnt_client_ip_1h,\n       nvl(user_ucnt_network_1h, 0) as user_ucnt_network_1h,\n       nvl(user_ucnt_device_sign_1h, 0) as user_ucnt_device_sign_1h,\n       nvl(user_ucnt_info_1_1h, 0) as user_ucnt_info_1_1h,\n       nvl(user_ucnt_info_2_1h, 0) as user_ucnt_info_2_1h,\n       nvl(user_ucnt_ip_prov_1h, 0) as user_ucnt_ip_prov_1h,\n       nvl(user_ucnt_ip_city_1h, 0) as user_ucnt_ip_city_1h,\n       nvl(user_ucnt_mobile_oper_platform_1h, 0) as user_ucnt_mobile_oper_platform_1h,\n       nvl(user_ucnt_operation_channel_1h, 0) as user_ucnt_operation_channel_1h,\n       nvl(user_ucnt_pay_scene_1h, 0) as user_ucnt_pay_scene_1h,\n       nvl(user_sum_amt_1h, 0) as user_sum_amt_1h,\n       nvl(user_ucnt_opposing_id_1h, 0) as user_ucnt_opposing_id_1h,\n       case\n           when gmt_occur_unix_user_diff_not_now>744 then 744\n           else gmt_occur_unix_user_diff_not_now\n       end as gmt_occur_unix_user_diff_not_now,\n       user_client_ip_rate_24h,\n       user_network_rate_24h,\n       user_device_sign_rate_24h,\n       user_info_1_rate_24h,\n       user_info_2_rate_24h,\n       user_ip_prov_rate_24h,\n       user_ip_city_rate_24h,\n       user_mobile_oper_platform_rate_24h,\n       user_operation_channel_rate_24h,\n       user_pay_scene_rate_24h,\n       user_amt_rate_24h,\n       user_opposing_id_rate_24h\nfrom t_sj_test_feature_user;\n\n -----------------------------device----------------------\n\ndrop table if exists t_sj_test_feature_device;\n\n\ncreate table t_sj_test_feature_device as\nselect t0.event_id,\n       t1.device_cnt_24h,\n       t1.device_ucnt_client_ip_24h,\n       t1.device_ucnt_network_24h,\n       t1.device_ucnt_user_id_24h,\n       t1.device_ucnt_info_1_24h,\n       t1.device_ucnt_info_2_24h,\n       t1.device_ucnt_ip_prov_24h,\n       t1.device_ucnt_ip_city_24h,\n       t1.device_ucnt_mobile_oper_platform_24h,\n       t1.device_ucnt_operation_channel_24h,\n       t1.device_ucnt_pay_scene_24h,\n       t1.device_sum_amt_24h,\n       t1.device_ucnt_opposing_id_24h,\n       t2.device_cnt_1h,\n       t2.device_ucnt_client_ip_1h,\n       t2.device_ucnt_network_1h,\n       t2.device_ucnt_user_id_1h,\n       t2.device_ucnt_info_1_1h,\n       t2.device_ucnt_info_2_1h,\n       t2.device_ucnt_ip_prov_1h,\n       t2.device_ucnt_ip_city_1h,\n       t2.device_ucnt_mobile_oper_platform_1h,\n       t2.device_ucnt_operation_channel_1h,\n       t2.device_ucnt_pay_scene_1h,\n       t2.device_sum_amt_1h,\n       t2.device_ucnt_opposing_id_1h,\n       t3.gmt_occur_unix_device_diff_not_now,\n       t4.device_client_ip_rate_24h,\n       t4.device_network_rate_24h,\n       t4.device_user_id_rate_24h,\n       t4.device_info_1_rate_24h,\n       t4.device_info_2_rate_24h,\n       t4.device_ip_prov_rate_24h,\n       t4.device_ip_city_rate_24h,\n       t4.device_mobile_oper_platform_rate_24h,\n       t4.device_operation_channel_rate_24h,\n       t4.device_pay_scene_rate_24h,\n       t4.device_amt_rate_24h,\n       t4.device_opposing_id_rate_24h\nfrom\n    (select event_id\n     from t_sj_test_data_code_unix) t0\nleft outer join t_sj_test_feature_device_24h_not_now t1 on t0.event_id = t1.event_id\nleft outer join t_sj_test_feature_device_1h_not_now t2 on t0.event_id = t2.event_id\nleft outer join t_sj_test_device_time_diff_not_now t3 on t0.event_id = t3.event_id\nleft outer join t_sj_test_device_scatter_freq_24h t4 on t0.event_id = t4.event_id;\n\n -- 去除特征中的缺失值\n-- rate 特征不会为空，24小时内没有使用过该IP，则设为0\n-- time_diff特征不会为空，如果数据集中第一次交易，则时间间隔为数据集起始时间（起始时间 - 24小时）至当前样本的时间\n-- 24小时内没有交易样本，则24h变量为0\n-- 1小时内没有交易样本，则1h变量为0\n--\n\ndrop table if exists t_sj_test_feature_device_notnull;\n\n\ncreate table t_sj_test_feature_device_notnull as\nselect event_id,\n       nvl(device_cnt_24h, 0) as device_cnt_24h,\n       nvl(device_ucnt_client_ip_24h, 0) as device_ucnt_client_ip_24h,\n       nvl(device_ucnt_network_24h, 0) as device_ucnt_network_24h,\n       nvl(device_ucnt_user_id_24h, 0) as device_ucnt_user_id_24h,\n       nvl(device_ucnt_info_1_24h, 0) as device_ucnt_info_1_24h,\n       nvl(device_ucnt_info_2_24h, 0) as device_ucnt_info_2_24h,\n       nvl(device_ucnt_ip_prov_24h, 0) as device_ucnt_ip_prov_24h,\n       nvl(device_ucnt_ip_city_24h, 0) as device_ucnt_ip_city_24h,\n       nvl(device_ucnt_mobile_oper_platform_24h, 0) as device_ucnt_mobile_oper_platform_24h,\n       nvl(device_ucnt_operation_channel_24h, 0) as device_ucnt_operation_channel_24h,\n       nvl(device_ucnt_pay_scene_24h, 0) as device_ucnt_pay_scene_24h,\n       nvl(device_sum_amt_24h, 0) as device_sum_amt_24h,\n       nvl(device_ucnt_opposing_id_24h, 0) as device_ucnt_opposing_id_24h,\n       nvl(device_cnt_1h, 0) as device_cnt_1h,\n       nvl(device_ucnt_client_ip_1h, 0) as device_ucnt_client_ip_1h,\n       nvl(device_ucnt_network_1h, 0) as device_ucnt_network_1h,\n       nvl(device_ucnt_user_id_1h, 0) as device_ucnt_user_id_1h,\n       nvl(device_ucnt_info_1_1h, 0) as device_ucnt_info_1_1h,\n       nvl(device_ucnt_info_2_1h, 0) as device_ucnt_info_2_1h,\n       nvl(device_ucnt_ip_prov_1h, 0) as device_ucnt_ip_prov_1h,\n       nvl(device_ucnt_ip_city_1h, 0) as device_ucnt_ip_city_1h,\n       nvl(device_ucnt_mobile_oper_platform_1h, 0) as device_ucnt_mobile_oper_platform_1h,\n       nvl(device_ucnt_operation_channel_1h, 0) as device_ucnt_operation_channel_1h,\n       nvl(device_ucnt_pay_scene_1h, 0) as device_ucnt_pay_scene_1h,\n       nvl(device_sum_amt_1h, 0) as device_sum_amt_1h,\n       nvl(device_ucnt_opposing_id_1h, 0) as device_ucnt_opposing_id_1h,\n       case\n           when gmt_occur_unix_device_diff_not_now>744 then 744\n           else gmt_occur_unix_device_diff_not_now\n       end as gmt_occur_unix_device_diff_not_now,\n       device_client_ip_rate_24h,\n       device_network_rate_24h,\n       device_user_id_rate_24h,\n       device_info_1_rate_24h,\n       device_info_2_rate_24h,\n       device_ip_prov_rate_24h,\n       device_ip_city_rate_24h,\n       device_mobile_oper_platform_rate_24h,\n       device_operation_channel_rate_24h,\n       device_pay_scene_rate_24h,\n       device_amt_rate_24h,\n       device_opposing_id_rate_24h\nfrom t_sj_test_feature_device;\n\n --------------------------oppo-----------------------\n\ndrop table if exists t_sj_test_feature_oppo;\n\n\ncreate table t_sj_test_feature_oppo as\nselect t0.event_id,\n       t1.oppo_cnt_24h,\n       t1.oppo_ucnt_user_id_24h,\n       t1.oppo_ucnt_client_ip_24h,\n       t1.oppo_ucnt_network_24h,\n       t1.oppo_ucnt_device_sign_24h,\n       t1.oppo_ucnt_info_1_24h,\n       t1.oppo_ucnt_info_2_24h,\n       t1.oppo_ucnt_ip_prov_24h,\n       t1.oppo_ucnt_ip_city_24h,\n       t1.oppo_ucnt_mobile_oper_platform_24h,\n       t1.oppo_ucnt_operation_channel_24h,\n       t1.oppo_ucnt_pay_scene_24h,\n       t1.oppo_sum_amt_24h,\n       t2.oppo_cnt_1h,\n       t2.oppo_ucnt_user_id_1h,\n       t2.oppo_ucnt_client_ip_1h,\n       t2.oppo_ucnt_network_1h,\n       t2.oppo_ucnt_device_sign_1h,\n       t2.oppo_ucnt_info_1_1h,\n       t2.oppo_ucnt_info_2_1h,\n       t2.oppo_ucnt_ip_prov_1h,\n       t2.oppo_ucnt_ip_city_1h,\n       t2.oppo_ucnt_mobile_oper_platform_1h,\n       t2.oppo_ucnt_operation_channel_1h,\n       t2.oppo_ucnt_pay_scene_1h,\n       t2.oppo_sum_amt_1h,\n       t3.gmt_occur_unix_oppo_diff_not_now\nfrom\n    (select event_id\n     from t_sj_test_data_code_unix) t0\nleft outer join t_sj_test_feature_oppo_24h_not_now t1 on t0.event_id = t1.event_id\nleft outer join t_sj_test_feature_oppo_1h_not_now t2 on t0.event_id = t2.event_id\nleft outer join t_sj_test_oppo_time_diff_not_now t3 on t0.event_id = t3.event_id;\n\n -- 去除特征中的缺失值\n\ndrop table if exists t_sj_test_feature_oppo_notnull;\n\n\ncreate table t_sj_test_feature_oppo_notnull as\nselect event_id,\n       nvl(oppo_cnt_24h, 0) as oppo_cnt_24h,\n       nvl(oppo_ucnt_user_id_24h, 0) as oppo_ucnt_user_id_24h,\n       nvl(oppo_ucnt_client_ip_24h, 0) as oppo_ucnt_client_ip_24h,\n       nvl(oppo_ucnt_network_24h, 0) as oppo_ucnt_network_24h,\n       nvl(oppo_ucnt_device_sign_24h, 0) as oppo_ucnt_device_sign_24h,\n       nvl(oppo_ucnt_info_1_24h, 0) as oppo_ucnt_info_1_24h,\n       nvl(oppo_ucnt_info_2_24h, 0) as oppo_ucnt_info_2_24h,\n       nvl(oppo_ucnt_ip_prov_24h, 0) as oppo_ucnt_ip_prov_24h,\n       nvl(oppo_ucnt_ip_city_24h, 0) as oppo_ucnt_ip_city_24h,\n       nvl(oppo_ucnt_mobile_oper_platform_24h, 0) as oppo_ucnt_mobile_oper_platform_24h,\n       nvl(oppo_ucnt_operation_channel_24h, 0) as oppo_ucnt_operation_channel_24h,\n       nvl(oppo_ucnt_pay_scene_24h, 0) as oppo_ucnt_pay_scene_24h,\n       nvl(oppo_sum_amt_24h, 0) as oppo_sum_amt_24h,\n       nvl(oppo_cnt_1h, 0) as oppo_cnt_1h,\n       nvl(oppo_ucnt_user_id_1h, 0) as oppo_ucnt_user_id_1h,\n       nvl(oppo_ucnt_client_ip_1h, 0) as oppo_ucnt_client_ip_1h,\n       nvl(oppo_ucnt_network_1h, 0) as oppo_ucnt_network_1h,\n       nvl(oppo_ucnt_device_sign_1h, 0) as oppo_ucnt_device_sign_1h,\n       nvl(oppo_ucnt_info_1_1h, 0) as oppo_ucnt_info_1_1h,\n       nvl(oppo_ucnt_info_2_1h, 0) as oppo_ucnt_info_2_1h,\n       nvl(oppo_ucnt_ip_prov_1h, 0) as oppo_ucnt_ip_prov_1h,\n       nvl(oppo_ucnt_ip_city_1h, 0) as oppo_ucnt_ip_city_1h,\n       nvl(oppo_ucnt_mobile_oper_platform_1h, 0) as oppo_ucnt_mobile_oper_platform_1h,\n       nvl(oppo_ucnt_operation_channel_1h, 0) as oppo_ucnt_operation_channel_1h,\n       nvl(oppo_ucnt_pay_scene_1h, 0) as oppo_ucnt_pay_scene_1h,\n       nvl(oppo_sum_amt_1h, 0) as oppo_sum_amt_1h,\n       case\n           when gmt_occur_unix_oppo_diff_not_now>744 then 744\n           else gmt_occur_unix_oppo_diff_not_now\n       end as gmt_occur_unix_oppo_diff_not_now\nfrom t_sj_test_feature_oppo;\n\n\ndrop table if exists t_sj_test_feature_data;\n\ncreate table t_sj_test_feature_data as\nselect t1.event_id,\n       t1.gmt_occur,\n       t1.hour,\n       t1.hour_bin,\n       t1.network,\n       -- t1.info_1,\n -- t1.info_2,\n\n       t1.is_one_people,\n       t1.mobile_oper_platform,\n       t1.operation_channel,\n       t1.pay_scene,\n       t1.amt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_cnt_1h / (t2.user_cnt_24h + t2.user_cnt_1h)\n       end as user_cnt_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_client_ip_1h / t2.user_cnt_1h\n       end as user_ucnt_client_ip_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_network_1h / t2.user_cnt_1h\n       end as user_ucnt_network_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_device_sign_1h / t2.user_cnt_1h\n       end as user_ucnt_device_sign_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_info_1_1h / t2.user_cnt_1h\n       end as user_ucnt_info_1_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_info_2_1h / t2.user_cnt_1h\n       end as user_ucnt_info_2_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_ip_prov_1h / t2.user_cnt_1h\n       end as user_ucnt_ip_prov_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_ip_city_1h / t2.user_cnt_1h\n       end as user_ucnt_ip_city_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_mobile_oper_platform_1h / t2.user_cnt_1h\n       end as user_ucnt_mobile_oper_platform_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_operation_channel_1h / t2.user_cnt_1h\n       end as user_ucnt_operation_channel_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_pay_scene_1h / t2.user_cnt_1h\n       end as user_ucnt_pay_scene_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_sum_amt_1h / t2.user_cnt_1h\n       end as user_sum_amt_1h_div_cnt,\n       case\n           when t2.user_cnt_1h = 0 then 0\n           else t2.user_ucnt_opposing_id_1h / t2.user_cnt_1h\n       end as user_ucnt_opposing_id_1h_div_cnt,\n       \n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_client_ip_24h / t2.user_cnt_24h\n       end as user_ucnt_client_ip_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_network_24h / t2.user_cnt_24h\n       end as user_ucnt_network_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_device_sign_24h / t2.user_cnt_24h\n       end as user_ucnt_device_sign_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_info_1_24h / t2.user_cnt_24h\n       end as user_ucnt_info_1_24h,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_info_2_24h / t2.user_cnt_24h\n       end as user_ucnt_info_2_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_ip_prov_24h / t2.user_cnt_24h\n       end as user_ucnt_ip_prov_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_ip_city_24h / t2.user_cnt_24h\n       end as user_ucnt_ip_city_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_mobile_oper_platform_24h / t2.user_cnt_24h\n       end as user_ucnt_mobile_oper_platform_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_operation_channel_24h / t2.user_cnt_24h\n       end as user_ucnt_operation_channel_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_pay_scene_24h / t2.user_cnt_24h\n       end as user_ucnt_pay_scene_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_sum_amt_24h / t2.user_cnt_24h\n       end as user_sum_amt_24h_div_cnt,\n       case\n           when t2.user_cnt_24h = 0 then 0\n           else t2.user_ucnt_opposing_id_24h / t2.user_cnt_24h\n       end as user_ucnt_opposing_id_24h_div_cnt,\n\n       t2.gmt_occur_unix_user_diff_not_now,\n       t2.user_client_ip_rate_24h,\n       t2.user_network_rate_24h,\n       t2.user_device_sign_rate_24h,\n       t2.user_info_1_rate_24h,\n       t2.user_info_2_rate_24h,\n       t2.user_ip_prov_rate_24h,\n       t2.user_ip_city_rate_24h,\n       t2.user_mobile_oper_platform_rate_24h,\n       t2.user_operation_channel_rate_24h,\n       t2.user_pay_scene_rate_24h,\n       t2.user_amt_rate_24h,\n       t2.user_opposing_id_rate_24h,\n\n\n       t3.device_cnt_24h,\n       t3.device_ucnt_client_ip_24h,\n       t3.device_ucnt_network_24h,\n       t3.device_ucnt_user_id_24h,\n       t3.device_ucnt_info_1_24h,\n       t3.device_ucnt_info_2_24h,\n       t3.device_ucnt_ip_prov_24h,\n       t3.device_ucnt_ip_city_24h,\n       t3.device_ucnt_mobile_oper_platform_24h,\n       t3.device_ucnt_operation_channel_24h,\n       t3.device_ucnt_pay_scene_24h,\n       t3.device_sum_amt_24h,\n       t3.device_ucnt_opposing_id_24h,\n       t3.device_cnt_1h,\n       t3.device_ucnt_client_ip_1h,\n       t3.device_ucnt_network_1h,\n       t3.device_ucnt_user_id_1h,\n       t3.device_ucnt_info_1_1h,\n       t3.device_ucnt_info_2_1h,\n       t3.device_ucnt_ip_prov_1h,\n       t3.device_ucnt_ip_city_1h,\n       t3.device_ucnt_mobile_oper_platform_1h,\n       t3.device_ucnt_operation_channel_1h,\n       t3.device_ucnt_pay_scene_1h,\n       t3.device_sum_amt_1h,\n       t3.device_ucnt_opposing_id_1h,\n       t3.gmt_occur_unix_device_diff_not_now,\n       t3.device_client_ip_rate_24h,\n       t3.device_network_rate_24h,\n       t3.device_user_id_rate_24h,\n       t3.device_info_1_rate_24h,\n       t3.device_info_2_rate_24h,\n       t3.device_ip_prov_rate_24h,\n       t3.device_ip_city_rate_24h,\n       t3.device_mobile_oper_platform_rate_24h,\n       t3.device_operation_channel_rate_24h,\n       t3.device_pay_scene_rate_24h,\n       t3.device_amt_rate_24h,\n       t3.device_opposing_id_rate_24h,\n\n       t4.oppo_cnt_24h,\n       t4.oppo_ucnt_user_id_24h,\n       t4.oppo_ucnt_client_ip_24h,\n       t4.oppo_ucnt_network_24h,\n       t4.oppo_ucnt_device_sign_24h,\n       t4.oppo_ucnt_info_1_24h,\n       t4.oppo_ucnt_info_2_24h,\n       t4.oppo_ucnt_ip_prov_24h,\n       t4.oppo_ucnt_ip_city_24h,\n       t4.oppo_ucnt_mobile_oper_platform_24h,\n       t4.oppo_ucnt_operation_channel_24h,\n       t4.oppo_ucnt_pay_scene_24h,\n       t4.oppo_sum_amt_24h,\n       t4.oppo_cnt_1h,\n       t4.oppo_ucnt_user_id_1h,\n       t4.oppo_ucnt_client_ip_1h,\n       t4.oppo_ucnt_network_1h,\n       t4.oppo_ucnt_device_sign_1h,\n       t4.oppo_ucnt_info_1_1h,\n       t4.oppo_ucnt_info_2_1h,\n       t4.oppo_ucnt_ip_prov_1h,\n       t4.oppo_ucnt_ip_city_1h,\n       t4.oppo_ucnt_mobile_oper_platform_1h,\n       t4.oppo_ucnt_operation_channel_1h,\n       t4.oppo_ucnt_pay_scene_1h,\n       t4.oppo_sum_amt_1h,\n       t4.gmt_occur_unix_oppo_diff_not_now\nfrom t_sj_test_feature_base t1\nleft outer join t_sj_test_feature_user_notnull t2 on t1.event_id = t2.event_id\nleft outer join t_sj_test_feature_device_notnull t3 on t1.event_id = t3.event_id\nleft outer join t_sj_test_feature_oppo_notnull t4 on t1.event_id = t4.event_id;\n\n\n-- 计算样本概率\ndrop table if exists result;\n\n\ncreate table result as\nselect event_id as id,\n       (1 - prediction_score) as score\nfrom result_0810; \n\n\n-- 计算atec评分标准\n-- TPR1：当FPR等于0.001时的TPR\n\n-- TPR2：当FPR等于0.005时的TPR\n\n-- TPR3：当FPR等于0.01时的TPR\n\n-- 模型成绩 = 0.4 * TPR1 + 0.3 * TPR2 + 0.3 * TPR3\nselect sum(atec_score) as atec_score from \n(select fpr,\n       recall * 0.3 as atec_score\nfrom t_train_result_0811\nwhere fpr in\n        (select max(fpr) as fpr\n         from t_train_result_0811\n         where fpr <=0.01 )\nunion all\nselect fpr,\n       recall * 0.3 as atec_score\nfrom t_train_result_0811\nwhere fpr in\n        (select max(fpr) as fpr\n         from t_train_result_0811\n         where fpr <=0.005 )\nunion all\nselect fpr,\n       recall * 0.4 as atec_score\nfrom t_train_result_0811\nwhere fpr in\n        (select max(fpr) as fpr\n         from t_train_result_0811\n         where fpr <=0.001 ))t2\n\n\n \n-- left outer join\n--     (select event_id,\n--             is_fraud\n--      from t_sj_train_data_code_unix) t3 on t1.event_id = t3.event_id;\n\n-- drop table if exists t_sj_train_dataset;\n\n-- create table t_sj_train_dataset as\n-- select *\n-- from t_sj_train_feature_data\n-- where gmt_occur <'2017-10-20 00';\n\n-- drop table if exists t_sj_tset_dataset;\n\n-- create table t_sj_tset_dataset as\n-- select *\n-- from t_sj_train_feature_data\n-- where gmt_occur >='2017-10-20 00';\n\n-- select count(*),\n--        count(*)/ 9600000\n-- from t_sj_train_feature_data\n-- where gmt_occur >'2017-10-20 00'\n\n-- select count(event_id) as event_id_cnt,\n--        count(hour) as hour_cnt,\n--        count(hour_bin) as hour_bin_cnt,\n--        count(network) as network_cnt,\n--        count(info_1) as info_1_cnt,\n--        count(info_2) as info_2_cnt,\n--        count(is_one_people) as is_one_people_cnt,\n--        count(mobile_oper_platform) as mobile_oper_platform_cnt,\n--        count(operation_channel) as operation_channel_cnt,\n--        count(pay_scene) as pay_scene_cnt,\n--        count(amt) as amt_cnt\n-- from t_sj_train_feature_data;\n\n\n",
 			"file": "test_feature_all.sql",
-			"file_size": 18161,
-			"file_write_time": 131784600230153147,
+			"file_size": 22794,
+			"file_write_time": 131785405529319814,
 			"settings":
 			{
-				"buffer_size": 17466,
-				"encoding": "Western (Windows 1252)",
+				"buffer_size": 21952,
 				"line_ending": "Windows",
 				"scratch": true
 			}
@@ -554,8 +553,16 @@
 			"file": "train_feature_all.sql",
 			"settings":
 			{
-				"buffer_size": 17492,
+				"buffer_size": 22193,
 				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "drop table if exists t_sj_train_user_cnt_20n;\n\n\ncreate table t_sj_train_user_cnt_20n as\nselect t3.event_id,\n       t4.user_cnt_20n\nfrom t_sj_train_data_code_unix t3\nleft outer join\n    (select user_id,\n            gmt_occur_unix,\n            count(*) as user_cnt_20n\n     from\n         (select row_number() over(partition by t1.user_id,t1.gmt_occur_unix\n                                   order by t2.gmt_occur_unix desc) as cnt_order,\n                 t1.user_id,\n                 t1.gmt_occur_unix\n          from\n              (select user_id,\n                      gmt_occur_unix\n               from t_sj_train_data_code_unix\n               group by user_id,\n                        gmt_occur_unix) t1\n          left outer join\n              (select user_id,\n                      gmt_occur_unix\n               from t_sj_train_data_code_unix) t2 on t1.user_id = t2.user_id\n          where t2.gmt_occur_unix < t1.gmt_occur_unix)t\n     where cnt_order <=20\n     group by user_id,\n              gmt_occur_unix) t4 on t3.user_id = t4.user_id\nand t3.gmt_occur_unix = t4.gmt_occur_unix;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n     drop table if exists t_sj_train_user_network_20n;\n\ndrop table if exists t_sj_train_user_network_20n_cnt;\n\n\ncreate table t_sj_train_user_network_20n_cnt as\nselect t1.event_id,\n       t1.network,\n       t1.user_network_cnt_20n,\n       t2.event_cnt\nfrom t_sj_train_user_network_20n t1\nleft outer join\n    (select event_id,\n            count(*) as event_cnt\n     from t_sj_train_user_network_20n\n     group by event_id)t2 on t1.event_id = t2.event_id;\n\n",
+			"settings":
+			{
+				"buffer_size": 1552,
 				"line_ending": "Windows"
 			}
 		},
@@ -569,10 +576,37 @@
 			}
 		},
 		{
-			"contents": "\ndrop table if exists t_sj_test_feature_device_24h_not_now;\n\n\ncreate table t_sj_test_feature_device_24h_not_now as\nselect t1.event_id,\n       count(*) as device_cnt_24h,\n       size(collect_set(t2.user_id)) as device_ucnt_user_id_24h,\n       size(collect_set(t2.client_ip)) as device_ucnt_client_ip_24h,\n       size(collect_set(t2.network)) as device_ucnt_network_24h,\n       size(collect_set(t2.info_1)) as device_ucnt_info_1_24h,\n       size(collect_set(t2.info_2)) as device_ucnt_info_2_24h,\n       size(collect_set(t2.ip_prov)) as device_ucnt_ip_prov_24h,\n       size(collect_set(t2.ip_city)) as device_ucnt_ip_city_24h,\n       size(collect_set(t2.mobile_oper_platform)) as device_ucnt_mobile_oper_platform_24h,\n       size(collect_set(t2.operation_channel)) as device_ucnt_operation_channel_24h,\n       size(collect_set(t2.pay_scene)) as device_ucnt_pay_scene_24h,\n       sum(t2.amt) as user_sum_amt_24h,\n       size(collect_set(t2.opposing_id)) as device_ucnt_opposing_id_24h\nfrom\n    (select event_id,\n            device_sign,\n            gmt_occur_unix\n     from t_sj_test_data_code_unix\n     where device_sign is not null) t1\nleft outer join\n    (select event_id,\n            device_sign,\n            gmt_occur_unix,\n            user_id,\n            client_ip,\n            network,\n            info_1,\n            info_2,\n            ip_prov,\n            ip_city,\n            mobile_oper_platform,\n            operation_channel,\n            pay_scene,\n            amt,\n            opposing_id\n     from t_sj_test_data_code_unix\n     where device_sign is not null) t2 on t1.device_sign = t2.device_sign\nwhere (t1.gmt_occur_unix - t2.gmt_occur_unix) <= 86400\n    and t2.gmt_occur_unix < t1.gmt_occur_unix\n    and t1.event_id != t2.event_id\ngroup by t1.event_id;",
+			"contents": " drop table if exists t_sj_train_device_user_id_20n;\n\n\ncreate table t_sj_train_device_user_id_20n as\nselect t3.event_id,\n       t4.device_sign,\n       t4.device_user_id_cnt_20n\nfrom t_sj_train_data_code_unix t3\ninner join\n    (select device_sign,\n            gmt_occur_unix,\n            device_sign,\n            count(*) as device_user_id_cnt_20n\n     from\n         (select row_number() over(partition by t1.device_sign,t1.gmt_occur_unix\n                                   order by t2.gmt_occur_unix desc) as cnt_order,\n                 t1.device_sign,\n                 t1.gmt_occur_unix,\n                 t2.device_sign\n          from\n              (select device_sign,\n                      gmt_occur_unix\n               from t_sj_train_data_code_unix\n               group by device_sign,\n                        gmt_occur_unix) t1\n          left outer join\n              (select device_sign,\n                      gmt_occur_unix,\n                      device_sign\n               from t_sj_train_data_code_unix) t2 on t1.device_sign = t2.device_sign\n          where t2.gmt_occur_unix < t1.gmt_occur_unix)t\n     where cnt_order <=20\n     group by device_sign,\n              gmt_occur_unix,\n              device_sign)t4 on t3.device_sign = t4.device_sign\nand t3.gmt_occur_unix = t4.gmt_occur_unix;\n     drop table if exists t_sj_train_device_info_1_20n;",
 			"settings":
 			{
-				"buffer_size": 1768,
+				"buffer_size": 1353,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "train_feature_user_in_cntn.sql",
+			"settings":
+			{
+				"buffer_size": 19758,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "train_feature_device_in_cntn.sql",
+			"settings":
+			{
+				"buffer_size": 20575,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "train_feature_m9.sql",
+			"settings":
+			{
+				"buffer_size": 29744,
+				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
@@ -580,7 +614,7 @@
 			"file": "test_feature_user_v2.sql",
 			"settings":
 			{
-				"buffer_size": 29864,
+				"buffer_size": 29421,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -598,7 +632,7 @@
 			"file": "train_feature_user.sql",
 			"settings":
 			{
-				"buffer_size": 31409,
+				"buffer_size": 31488,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -869,7 +903,7 @@
 	],
 	"find":
 	{
-		"height": 39.0
+		"height": 38.0
 	},
 	"find_in_files":
 	{
@@ -883,6 +917,16 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"device_device_sign",
+			"user",
+			"user_device_sign_cnt_20n",
+			"user_id",
+			"train_user",
+			"24h",
+			"test",
+			"1",
+			"1h_div_24h",
+			"t_train_result_0811",
 			"user_ucnt",
 			"train",
 			"device_sign",
@@ -1000,17 +1044,7 @@
 			"cert_city",
 			"cert_prov",
 			"ip_city",
-			"ip_prov",
-			"device_sign",
-			"client_ip",
-			"as uid_most",
-			"uid_cnt",
-			"as uid_cnt",
-			"ucnt",
-			"size(collect_set",
-			"income_card_no",
-			"opposing_id",
-			"card_cert_no"
+			"ip_prov"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1018,6 +1052,16 @@
 		"regex": false,
 		"replace_history":
 		[
+			"device_user_id",
+			"device",
+			"user_user_id_cnt_20n",
+			"device_sign",
+			"train_device",
+			"20n",
+			"train",
+			"24",
+			"1h_div_cnt",
+			"${tp1}",
 			"device_ucnt",
 			"test",
 			"user_id",
@@ -1135,17 +1179,7 @@
 			"cert_prov",
 			"ip_city",
 			"ip_prov",
-			"network",
-			"device_sign",
-			"as uid_most_rate",
-			"t1.uid_cnt",
-			"as uid_miss_rate",
-			"cnt",
-			"count",
-			"version",
-			"income_card_no",
-			"opposing_id",
-			"card_cert_no"
+			"network"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1156,7 +1190,7 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 7,
 			"sheets":
 			[
 				{
@@ -1165,30 +1199,31 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 17466,
+						"buffer_size": 21952,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								16121,
-								16121
+								12478,
+								19937
 							]
 						],
 						"settings":
 						{
 							"in_converting": true,
 							"origin_encoding": "GBK",
+							"revert_to_scratch": true,
 							"syntax": "Packages/SQL/SQL.sublime-syntax",
 							"tab_size": 7,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 7840.0,
+						"translation.y": 8664.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 12,
 					"type": "text"
 				},
 				{
@@ -1204,8 +1239,8 @@
 						"selection":
 						[
 							[
-								26761,
-								22288
+								6272,
+								6282
 							]
 						],
 						"settings":
@@ -1216,10 +1251,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 13034.0,
+						"translation.y": 11131.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 9,
 					"type": "text"
 				},
 				{
@@ -1235,8 +1270,8 @@
 						"selection":
 						[
 							[
-								11599,
-								8571
+								8568,
+								7458
 							]
 						],
 						"settings":
@@ -1247,10 +1282,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 4491.0,
+						"translation.y": 3944.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 13,
 					"type": "text"
 				},
 				{
@@ -1259,15 +1294,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 17492,
+						"buffer_size": 22193,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								16738,
-								16738
+								15784,
+								15784
 							]
 						],
 						"settings":
@@ -1278,14 +1313,43 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 8470.0,
+						"translation.y": 58.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 10,
 					"type": "text"
 				},
 				{
 					"buffer": 4,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1552,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1084,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
 					"file": "test_feature_oppo.sql",
 					"semi_transient": false,
 					"settings":
@@ -1297,8 +1361,8 @@
 						"selection":
 						[
 							[
-								10574,
-								7555
+								6446,
+								7551
 							]
 						],
 						"settings":
@@ -1309,18 +1373,18 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 3601.0,
+						"translation.y": 3174.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 6,
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1768,
+						"buffer_size": 1353,
 						"regions":
 						{
 						},
@@ -1328,37 +1392,7 @@
 						[
 							[
 								0,
-								1768
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/SQL/SQL.sublime-syntax",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 10,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "test_feature_user_v2.sql",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 29864,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								27153,
-								22873
+								1353
 							]
 						],
 						"settings":
@@ -1368,14 +1402,136 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 14654.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "train_feature_user_in_cntn.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 19758,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								18448,
+								18448
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 9741.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "train_feature_device_in_cntn.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 20575,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								607,
+								607
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 7,
+					"buffer": 9,
+					"file": "train_feature_m9.sql",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 29744,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								19848,
+								19957
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "UTF-8",
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 8402.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 11,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "test_feature_user_v2.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 29421,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6345,
+								22428
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "UTF-8",
+							"syntax": "Packages/SQL/SQL.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 12763.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 11,
 					"file": "train_feature_device.sql",
 					"semi_transient": false,
 					"settings":
@@ -1387,8 +1543,8 @@
 						"selection":
 						[
 							[
-								26855,
-								22372
+								6283,
+								6293
 							]
 						],
 						"settings":
@@ -1399,27 +1555,27 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 13072.0,
+						"translation.y": 2551.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
-					"buffer": 8,
+					"buffer": 12,
 					"file": "train_feature_user.sql",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 31409,
+						"buffer_size": 31488,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								21753,
-								26043
+								18225,
+								21830
 							]
 						],
 						"settings":
@@ -1430,14 +1586,14 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 14891.0,
+						"translation.y": 11702.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 6,
 					"type": "text"
 				},
 				{
-					"buffer": 9,
+					"buffer": 13,
 					"file": "train_feature_base.sql",
 					"semi_transient": false,
 					"settings":
@@ -1461,14 +1617,14 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 600.0,
+						"translation.y": 570.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 9,
+					"stack_index": 14,
 					"type": "text"
 				},
 				{
-					"buffer": 10,
+					"buffer": 14,
 					"file": "test_feature_user.sql",
 					"semi_transient": false,
 					"settings":
@@ -1480,8 +1636,8 @@
 						"selection":
 						[
 							[
-								72063,
-								72063
+								66132,
+								66132
 							]
 						],
 						"settings":
@@ -1492,14 +1648,14 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 45642.0,
+						"translation.y": 11244.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
-					"buffer": 11,
+					"buffer": 15,
 					"file": "test_feature_analysis.sql",
 					"semi_transient": false,
 					"settings":
@@ -1526,7 +1682,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 11,
+					"stack_index": 15,
 					"type": "text"
 				}
 			]
@@ -1534,7 +1690,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 28.0
+		"height": 27.0
 	},
 	"input":
 	{
@@ -1575,7 +1731,7 @@
 	"project": "atec_round2.sublime-project",
 	"replace":
 	{
-		"height": 70.0
+		"height": 68.0
 	},
 	"save_all_on_build": true,
 	"select_file":
