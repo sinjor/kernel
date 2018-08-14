@@ -1,4 +1,87 @@
 -- 统计用户在前20次的交易次数，因为有部分用户的交易次数可能不足20次
+-- 以及20次内的不同值
+drop table if exists t_sj_test_user_20n_not_now;
+
+
+create table t_sj_test_user_20n_not_now as
+select t3.event_id,
+       t4.user_cnt_20n,
+       t4.user_ucnt_client_ip_20n,
+       t4.user_ucnt_network_20n,
+       t4.user_ucnt_device_sign_20n,
+       t4.user_ucnt_info_1_20n,
+       t4.user_ucnt_info_2_20n,
+       t4.user_ucnt_ip_prov_20n,
+       t4.user_ucnt_ip_city_20n,
+       t4.user_ucnt_mobile_oper_platform_20n,
+       t4.user_ucnt_operation_channel_20n,
+       t4.user_ucnt_pay_scene_20n,
+       t4.user_sum_amt_20n,
+       t4.user_ucnt_opposing_id_20n
+from t_sj_test_data_code_unix t3
+left outer join
+    (select user_id,
+            gmt_occur_unix,
+            count(*) as user_cnt_20n,
+            size(collect_set(client_ip)) as user_ucnt_client_ip_20n,
+            size(collect_set(network)) as user_ucnt_network_20n,
+            size(collect_set(device_sign)) as user_ucnt_device_sign_20n,
+            size(collect_set(info_1)) as user_ucnt_info_1_20n,
+            size(collect_set(info_2)) as user_ucnt_info_2_20n,
+            size(collect_set(ip_prov)) as user_ucnt_ip_prov_20n,
+            size(collect_set(ip_city)) as user_ucnt_ip_city_20n,
+            size(collect_set(mobile_oper_platform)) as user_ucnt_mobile_oper_platform_20n,
+            size(collect_set(operation_channel)) as user_ucnt_operation_channel_20n,
+            size(collect_set(pay_scene)) as user_ucnt_pay_scene_20n,
+            sum(amt) as user_sum_amt_20n,
+            size(collect_set(opposing_id)) as user_ucnt_opposing_id_20n
+     from
+         (select row_number() over(partition by t1.user_id,t1.gmt_occur_unix
+                                   order by t2.gmt_occur_unix desc) as cnt_order,
+                 t1.user_id,
+                 t1.gmt_occur_unix,
+                 t2.client_ip,
+                 t2.network,
+                 t2.device_sign,
+                 t2.info_1,
+                 t2.info_2,
+                 t2.ip_prov,
+                 t2.ip_city,
+                 t2.mobile_oper_platform,
+                 t2.operation_channel,
+                 t2.pay_scene,
+                 t2.amt,
+                 t2.opposing_id
+          from
+              (select user_id,
+                      gmt_occur_unix
+               from t_sj_test_data_code_unix
+               group by user_id,
+                        gmt_occur_unix) t1
+          left outer join
+              (select user_id,
+                      gmt_occur_unix,
+                      client_ip,
+                      network,
+                      device_sign,
+                      info_1,
+                      info_2,
+                      ip_prov,
+                      ip_city,
+                      mobile_oper_platform,
+                      operation_channel,
+                      pay_scene,
+                      amt,
+                      opposing_id
+               from t_sj_test_data_code_unix) t2 on t1.user_id = t2.user_id
+          where t2.gmt_occur_unix < t1.gmt_occur_unix)t
+     where cnt_order <=20
+     group by user_id,
+              gmt_occur_unix) t4 on t3.user_id = t4.user_id
+and t3.gmt_occur_unix = t4.gmt_occur_unix;
+
+
+-- 统计用户在前20次的交易次数，因为有部分用户的交易次数可能不足20次
 drop table if exists t_sj_test_user_cnt_20n;
 
 

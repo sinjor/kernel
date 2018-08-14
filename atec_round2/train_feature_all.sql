@@ -499,33 +499,132 @@ select case
        t3.device_pay_scene_rate_24h,
        t3.device_amt_rate_24h,
        t3.device_opposing_id_rate_24h,
-       t4.oppo_cnt_24h,
-       t4.oppo_ucnt_user_id_24h,
-       t4.oppo_ucnt_client_ip_24h,
-       t4.oppo_ucnt_network_24h,
-       t4.oppo_ucnt_device_sign_24h,
-       t4.oppo_ucnt_info_1_24h,
-       t4.oppo_ucnt_info_2_24h,
-       t4.oppo_ucnt_ip_prov_24h,
-       t4.oppo_ucnt_ip_city_24h,
-       t4.oppo_ucnt_mobile_oper_platform_24h,
-       t4.oppo_ucnt_operation_channel_24h,
-       t4.oppo_ucnt_pay_scene_24h,
-       t4.oppo_sum_amt_24h,
-       t4.oppo_cnt_1h,
-       t4.oppo_ucnt_user_id_1h,
-       t4.oppo_ucnt_client_ip_1h,
-       t4.oppo_ucnt_network_1h,
-       t4.oppo_ucnt_device_sign_1h,
-       t4.oppo_ucnt_info_1_1h,
-       t4.oppo_ucnt_info_2_1h,
-       t4.oppo_ucnt_ip_prov_1h,
-       t4.oppo_ucnt_ip_city_1h,
-       t4.oppo_ucnt_mobile_oper_platform_1h,
-       t4.oppo_ucnt_operation_channel_1h,
-       t4.oppo_ucnt_pay_scene_1h,
-       t4.oppo_sum_amt_1h,
-       t4.gmt_occur_unix_oppo_diff_not_now
+      case
+           when t4.oppo_cnt_1h = 0 then 0
+           else t4.oppo_cnt_1h / (t4.oppo_cnt_1h + t4.oppo_cnt_24h)
+       end as oppo_cnt_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_user_id_1h = 0 then 0
+           else t4.oppo_ucnt_user_id_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_user_id_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_client_ip_1h = 0 then 0
+           else t4.oppo_ucnt_client_ip_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_client_ip_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_network_1h = 0 then 0
+           else t4.oppo_ucnt_network_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_network_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_device_sign_1h = 0 then 0
+           else t4.oppo_ucnt_device_sign_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_device_sign_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_info_1_1h = 0 then 0
+           else t4.oppo_ucnt_info_1_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_info_1_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_info_2_1h = 0 then 0
+           else t4.oppo_ucnt_info_2_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_info_2_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_ip_prov_1h = 0 then 0
+           else t4.oppo_ucnt_ip_prov_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_ip_prov_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_ip_city_1h = 0 then 0
+           else t4.oppo_ucnt_ip_city_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_ip_city_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_mobile_oper_platform_1h = 0 then 0
+           else t4.oppo_ucnt_mobile_oper_platform_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_mobile_oper_platform_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_operation_channel_1h = 0 then 0
+           else t4.oppo_ucnt_operation_channel_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_operation_channel_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_pay_scene_1h = 0 then 0
+           else t4.oppo_ucnt_pay_scene_1h / t4.oppo_cnt_1h
+       end as oppo_ucnt_pay_scene_1h_div_cnt,
+       case
+           when t4.oppo_sum_amt_1h = 0 then 0
+           else t4.oppo_sum_amt_1h / t4.oppo_cnt_1h
+       end as oppo_sum_amt_1h_div_cnt,
+       case
+           when t4.oppo_ucnt_user_id_24h = 0 then 0
+           else t4.oppo_ucnt_user_id_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_user_id_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_client_ip_24h = 0 then 0
+           else t4.oppo_ucnt_client_ip_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_client_ip_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_network_24h = 0 then 0
+           else t4.oppo_ucnt_network_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_network_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_device_sign_24h = 0 then 0
+           else t4.oppo_ucnt_device_sign_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_device_sign_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_info_1_24h = 0 then 0
+           else t4.oppo_ucnt_info_1_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_info_1_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_info_2_24h = 0 then 0
+           else t4.oppo_ucnt_info_2_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_info_2_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_ip_prov_24h = 0 then 0
+           else t4.oppo_ucnt_ip_prov_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_ip_prov_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_ip_city_24h = 0 then 0
+           else t4.oppo_ucnt_ip_city_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_ip_city_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_mobile_oper_platform_24h = 0 then 0
+           else t4.oppo_ucnt_mobile_oper_platform_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_mobile_oper_platform_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_operation_channel_24h = 0 then 0
+           else t4.oppo_ucnt_operation_channel_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_operation_channel_24h_div_cnt,
+       case
+           when t4.oppo_ucnt_pay_scene_24h = 0 then 0
+           else t4.oppo_ucnt_pay_scene_24h / t4.oppo_cnt_24h
+       end as oppo_ucnt_pay_scene_24h_div_cnt,
+       case
+           when t4.oppo_sum_amt_24h = 0 then 0
+           else t4.oppo_sum_amt_24h / t4.oppo_cnt_24h
+       end as oppo_sum_amt_24h_div_cnt,
+       t4.gmt_occur_unix_oppo_diff_not_now,
+
+       t5.user_client_ip_rate_20n,
+       t5.user_network_rate_20n,
+       t5.user_device_sign_rate_20n,
+       t5.user_info_1_rate_20n,
+       t5.user_info_2_rate_20n,
+       t5.user_ip_prov_rate_20n,
+       t5.user_ip_city_rate_20n,
+       t5.user_mobile_oper_platform_rate_20n,
+       t5.user_operation_channel_rate_20n,
+       t5.user_pay_scene_rate_20n,
+       t5.user_amt_rate_20n,
+       t5.user_opposing_id_rate_20n,
+       t6.device_client_ip_rate_20n,
+        t6.device_network_rate_20n,
+        t6.device_user_id_rate_20n,
+        t6.device_info_1_rate_20n,
+        t6.device_info_2_rate_20n,
+        t6.device_ip_prov_rate_20n,
+        t6.device_ip_city_rate_20n,
+        t6.device_mobile_oper_platform_rate_20n,
+        t6.device_operation_channel_rate_20n,
+        t6.device_pay_scene_rate_20n,
+        t6.device_amt_rate_20n,
+        t6.device_opposing_id_rate_20n
 from
     (select event_id,
             is_fraud
@@ -533,7 +632,11 @@ from
 left outer join t_sj_train_feature_base t1 on t1.event_id = t0.event_id
 left outer join t_sj_train_feature_user_notnull t2 on t1.event_id = t2.event_id
 left outer join t_sj_train_feature_device_notnull t3 on t1.event_id = t3.event_id
-left outer join t_sj_train_feature_oppo_notnull t4 on t1.event_id = t4.event_id;
+left outer join t_sj_train_feature_oppo_notnull t4 on t1.event_id = t4.event_id
+left outer join t_sj_train_user_scatter_freq_20n t5 on t1.event_id = t5.event_id
+left outer join t_sj_train_device_scatter_freq_20n t6 on t1.event_id = t6.event_id;
+
+
 
 
 drop table if exists t_sj_train_dataset;
